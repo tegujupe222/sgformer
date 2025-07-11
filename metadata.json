@@ -1,0 +1,5 @@
+{
+  "name": "SGformer - Education Form Management",
+  "description": "A form management and event check-in system for educational institutions. Admins can create event forms, and users can register and receive tickets.",
+  "requestFramePermissions": []
+}

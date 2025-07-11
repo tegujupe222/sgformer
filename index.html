@@ -1,0 +1,52 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SGformer - 教育フォーム管理システム</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'brand-primary': '#005A9C', // A professional blue
+              'brand-secondary': '#3B7EBF', // A lighter, friendly blue
+              'brand-accent': '#F5A623', // A warm, attention-grabbing orange/yellow
+              'brand-dark': '#2c3e50', // A dark slate for text
+              'brand-light': '#f8f9fa' // A very light grey for backgrounds
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+          }
+        },
+        plugins: [
+            function({ addUtilities }) {
+                addUtilities({
+                    '.animate-fade-in': {
+                        'animation': 'fadeIn 0.5s ease-in-out',
+                    },
+                    '@keyframes fadeIn': {
+                        '0%': { opacity: '0' },
+                        '100%': { opacity: '1' },
+                    },
+                })
+            }
+        ],
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- For PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
