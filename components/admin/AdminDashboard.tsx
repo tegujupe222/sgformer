@@ -46,7 +46,7 @@ const AdminDashboard: React.FC = () => {
             <div className="space-y-4">
               {forms.map(form => {
                 const submissions = getSubmissionsByFormId(form.id);
-                const totalCapacity = form.options.reduce((sum, opt) => sum + opt.limit, 0);
+                const totalCapacity = form.options?.reduce((sum: number, opt: any) => sum + opt.limit, 0) || 0;
                 const submissionCount = submissions.length;
                 const progress = totalCapacity > 0 ? (submissionCount / totalCapacity) * 100 : 0;
                 return (

@@ -1,51 +1,69 @@
 
-import type { EventForm, Submission } from '../types';
+import { EventForm, Submission } from '../types';
 
 export const getMockForms = (): EventForm[] => [
   {
     id: 'form-2024-info-session',
-    title: '2024年度秋学期 学校説明会',
-    description: 'カリキュラム、施設、入学手続きについて学ぶ説明会です。来年度の入学を検討されている生徒・保護者の方を対象としています。',
-    createdAt: new Date('2024-07-01T10:00:00Z').toISOString(),
+    title: '2024年度 学校説明会',
+    description: '本校の教育理念、カリキュラム、進路実績について詳しくご説明いたします。',
+    questions: [],
     options: [
-      { id: 'session-am', label: '午前の部 (9:00 - 11:00)', limit: 50 },
-      { id: 'session-pm', label: '午後の部 (13:00 - 15:00)', limit: 50 },
-      { id: 'session-online', label: 'オンライン説明会 (19:00 - 20:30)', limit: 100 },
+      { id: 'session-am', label: '午前の部 (10:00-12:00)', limit: 50 },
+      { id: 'session-pm', label: '午後の部 (14:00-16:00)', limit: 50 },
     ],
+    settings: {
+      allowAnonymous: false,
+      requireLogin: true,
+      maxSubmissions: 100,
+      isActive: true
+    },
+    createdAt: '2024-01-15T09:00:00Z',
+    updatedAt: '2024-01-15T09:00:00Z',
+    createdBy: 'admin001'
   },
   {
     id: 'form-2024-trial-lesson',
-    title: 'STEM体験授業',
-    description: '科学、技術、工学、数学プログラムに興味のある生徒向けの体験授業です。定員に限りがあります。',
-    createdAt: new Date('2024-07-15T10:00:00Z').toISOString(),
+    title: '2024年度 体験授業',
+    description: '実際の授業を体験していただき、本校の学習環境を体感してください。',
+    questions: [],
     options: [
-      { id: 'trial-robotics', label: 'ロボティクス・プログラミング', limit: 15 },
-      { id: 'trial-chemistry', label: '化学実験', limit: 20 },
-      { id: 'trial-coding', label: 'Python入門', limit: 15 },
+      { id: 'math', label: '数学 (代数)', limit: 30 },
+      { id: 'science', label: '理科 (物理)', limit: 30 },
+      { id: 'english', label: '英語 (会話)', limit: 25 },
     ],
+    settings: {
+      allowAnonymous: false,
+      requireLogin: true,
+      maxSubmissions: 85,
+      isActive: true
+    },
+    createdAt: '2024-01-20T10:00:00Z',
+    updatedAt: '2024-01-20T10:00:00Z',
+    createdBy: 'admin001'
   },
 ];
 
 export const getMockSubmissions = (): Submission[] => [
-    // Some mock submissions for the info session to show functionality
     {
         id: 'sub-001',
         formId: 'form-2024-info-session',
-        userId: 'user-abc',
-        userName: '田中 花子',
-        userEmail: 'tanaka.hanako@example.com',
+        userId: 'user123',
+        userName: '山田 太郎',
+        userEmail: 'yamada.taro@example.com',
         selectedOptionId: 'session-am',
-        submittedAt: new Date().toISOString(),
+        answers: [],
+        submittedAt: '2024-01-16T14:30:00Z',
         attended: false,
     },
     {
         id: 'sub-002',
-        formId: 'form-2024-info-session',
-        userId: 'user-def',
-        userName: '佐藤 太郎',
-        userEmail: 'sato.taro@example.com',
-        selectedOptionId: 'session-pm',
-        submittedAt: new Date().toISOString(),
+        formId: 'form-2024-trial-lesson',
+        userId: 'user456',
+        userName: '佐藤 花子',
+        userEmail: 'sato.hanako@example.com',
+        selectedOptionId: 'math',
+        answers: [],
+        submittedAt: '2024-01-21T11:15:00Z',
         attended: true,
     }
 ];

@@ -56,7 +56,7 @@ const SubmissionsView: React.FC = () => {
                 </thead>
                 <tbody className="text-gray-700">
                 {submissions.map(sub => {
-                    const option = form.options.find(opt => opt.id === sub.selectedOptionId);
+                    const option = form.options?.find(opt => opt.id === sub.selectedOptionId);
                     return (
                         <tr key={sub.id} className="border-b border-gray-200 hover:bg-gray-50">
                         <td className="py-3 px-4">{sub.userName}</td>

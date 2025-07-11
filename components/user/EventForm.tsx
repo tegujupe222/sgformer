@@ -54,6 +54,7 @@ const EventForm: React.FC = () => {
           userName: user!.name,
           userEmail: user!.email,
           selectedOptionId,
+          answers: [], // 空のanswers配列を追加
           submittedAt: new Date().toISOString(),
           attended: false,
         };
@@ -83,7 +84,7 @@ const EventForm: React.FC = () => {
         <div>
           <h3 className="text-lg font-medium text-gray-900">Choose your session:</h3>
           <div className="mt-4 space-y-3">
-            {form.options.map(option => {
+            {form.options?.map(option => {
               const submissionCount = getSubmissionsForOption(option.id);
               const isFull = submissionCount >= option.limit;
               const isSelected = selectedOptionId === option.id;

@@ -8,7 +8,7 @@ export const generateTicketPDF = (submission: Submission, form: EventForm) => {
   const { jsPDF: JSPDF } = jsPDF;
   const doc = new JSPDF();
   
-  const formOption = form.options.find(opt => opt.id === submission.selectedOptionId);
+  const formOption = form.options?.find(opt => opt.id === submission.selectedOptionId);
 
   // --- Header ---
   doc.setFontSize(22);
