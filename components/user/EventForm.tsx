@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 import PageWrapper from '../layout/PageWrapper';
 import { ArrowLeftIcon } from '../ui/Icons';
+import { submitForm } from '../../services/api';
 
 const EventForm: React.FC = () => {
   const { formId } = useParams<{ formId: string }>();
@@ -23,7 +24,7 @@ const EventForm: React.FC = () => {
     return submissions.filter(s => s.selectedOptionId === optionId).length;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
     if (!selectedOptionId) {
       setError('Please select an option to register.');
@@ -31,19 +32,41 @@ const EventForm: React.FC = () => {
     }
     setError('');
 
-    const newSubmission = {
-      id: `sub-${Date.now()}`,
+    const formData = {
+      name: user!.name,
+      email: user!.email,
+      eventName: form.title,
+      selectedOptionId,
       formId: form.id,
       userId: user!.id,
-      userName: user!.name,
-      userEmail: user!.email,
-      selectedOptionId,
       submittedAt: new Date().toISOString(),
-      attended: false,
     };
 
-    addSubmission(newSubmission);
-    navigate(`/user/confirmation/${newSubmission.id}`);
+    try {
+      const result = await submitForm(formData);
+      
+      if (result.success) {
+        // ローカル状態も更新
+        const newSubmission = {
+          id: result.data?.submissionId || `sub-${Date.now()}`,
+          formId: form.id,
+          userId: user!.id,
+          userName: user!.name,
+          userEmail: user!.email,
+          selectedOptionId,
+          submittedAt: new Date().toISOString(),
+          attended: false,
+        };
+
+        addSubmission(newSubmission);
+        navigate(`/user/confirmation/${newSubmission.id}`);
+      } else {
+        setError(result.message || 'フォーム送信に失敗しました');
+      }
+    } catch (error) {
+      console.error('Form submission error:', error);
+      setError('フォーム送信に失敗しました');
+    }
   };
 
   const actions = (
