@@ -45,7 +45,9 @@ const useLocalStorage = <T,>(key: string, initialValue: T): [T, React.Dispatch<R
   return [storedValue, setValue];
 };
 
-export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+type AppProviderProps = { children: React.ReactNode };
+export const AppProvider = (props: any) => {
+  const { children } = props;
   const [user, setUser] = useLocalStorage<User | null>('sgformer-user', null);
   const [forms, setForms] = useLocalStorage<EventForm[]>('sgformer-forms', []);
   const [submissions, setSubmissions] = useLocalStorage<Submission[]>('sgformer-submissions', []);
