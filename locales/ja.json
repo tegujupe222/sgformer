@@ -31,7 +31,13 @@
     "logout": "ログアウト",
     "signInAsUser": "一般ユーザーとしてログイン",
     "signInAsAdmin": "管理者としてログイン",
-    "demoMessage": "これはデモンストレーションです。ボタンをクリックしてGoogleアカウントでのログインをシミュレートしてください。"
+    "signInWithGoogle": "Googleでログイン",
+    "demoMessage": "これはデモンストレーションです。Googleアカウントでログインするか、デモボタンを使用してください。",
+    "loginError": "ログインに失敗しました",
+    "loginSuccess": "ログインが完了しました",
+    "logoutSuccess": "ログアウトが完了しました",
+    "authenticationRequired": "認証が必要です",
+    "invalidCredentials": "無効な認証情報です"
   },
   "navigation": {
     "dashboard": "ダッシュボード",

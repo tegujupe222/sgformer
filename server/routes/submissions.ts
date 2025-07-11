@@ -6,7 +6,7 @@ import User from '../models/User';
 const router = express.Router();
 
 // 提出物一覧取得（管理者用）
-router.get('/', async (req, res) => {
+router.get('/', async (req: any, res) => {
   try {
     const { page = 1, limit = 10, formId, search, attended } = req.query;
     const skip = (Number(page) - 1) * Number(limit);
@@ -32,8 +32,8 @@ router.get('/', async (req, res) => {
     // 管理者の場合は自分が作成したフォームの提出物のみ
     const user = await User.findOne({ email: req.user.email });
     if (user?.role === 'admin') {
-      const userForms = await Form.find({ createdBy: user._id }).select('_id');
-      const formIds = userForms.map(form => form._id);
+      const userForms = await Form.find({ createdBy: user._id as any }).select('_id');
+      const formIds = userForms.map((form: any) => form._id);
       filter.formId = { $in: formIds };
     }
 
@@ -64,7 +64,7 @@ router.get('/', async (req, res) => {
 });
 
 // 提出物詳細取得
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req: any, res) => {
   try {
     const { id } = req.params;
     const submission = await Submission.findById(id)
@@ -80,7 +80,7 @@ router.get('/:id', async (req, res) => {
     const user = await User.findOne({ email: req.user.email });
     if (user?.role === 'admin') {
       const form = await Form.findById(submission.formId);
-      if (!form || form.createdBy.toString() !== user._id.toString()) {
+      if (!form || form.createdBy.toString() !== (user._id as any).toString()) {
         return res.status(403).json({ message: 'Permission denied' });
       }
     }
@@ -229,7 +229,7 @@ router.post('/', async (req, res) => {
 });
 
 // 提出物更新（出席状況の変更など）
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req: any, res) => {
   try {
     const { id } = req.params;
     const { attended } = req.body;
@@ -243,7 +243,7 @@ router.put('/:id', async (req, res) => {
     const user = await User.findOne({ email: req.user.email });
     if (user?.role === 'admin') {
       const form = await Form.findById(submission.formId);
-      if (!form || form.createdBy.toString() !== user._id.toString()) {
+      if (!form || form.createdBy.toString() !== (user._id as any).toString()) {
         return res.status(403).json({ message: 'Permission denied' });
       }
     }
@@ -267,7 +267,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // 提出物削除
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req: any, res) => {
   try {
     const { id } = req.params;
 
@@ -280,7 +280,7 @@ router.delete('/:id', async (req, res) => {
     const user = await User.findOne({ email: req.user.email });
     if (user?.role === 'admin') {
       const form = await Form.findById(submission.formId);
-      if (!form || form.createdBy.toString() !== user._id.toString()) {
+      if (!form || form.createdBy.toString() !== (user._id as any).toString()) {
         return res.status(403).json({ message: 'Permission denied' });
       }
     }
@@ -296,7 +296,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // 提出物のエクスポート（CSV）
-router.get('/:formId/export', async (req, res) => {
+router.get('/:formId/export', async (req: any, res) => {
   try {
     const { formId } = req.params;
     const { format = 'csv' } = req.query;
@@ -305,7 +305,7 @@ router.get('/:formId/export', async (req, res) => {
     const user = await User.findOne({ email: req.user.email });
     if (user?.role === 'admin') {
       const form = await Form.findById(formId);
-      if (!form || form.createdBy.toString() !== user._id.toString()) {
+      if (!form || form.createdBy.toString() !== (user._id as any).toString()) {
         return res.status(403).json({ message: 'Permission denied' });
       }
     }
@@ -356,6 +356,45 @@ router.get('/:formId/export', async (req, res) => {
   } catch (error) {
     console.error('Export submissions error:', error);
     res.status(500).json({ message: 'Failed to export submissions' });
+  }
+});
+
+// 出席確認エンドポイント
+router.patch('/:id/attendance', async (req: any, res) => {
+  try {
+    const { id } = req.params;
+    const { attended } = req.body;
+
+    if (typeof attended !== 'boolean') {
+      return res.status(400).json({ message: 'attended must be a boolean value' });
+    }
+
+    const submission = await Submission.findById(id);
+    if (!submission) {
+      return res.status(404).json({ message: 'Submission not found' });
+    }
+
+    // 権限チェック
+    const user = await User.findOne({ email: req.user.email });
+    if (user?.role === 'admin') {
+      const form = await Form.findById(submission.formId);
+      if (!form || form.createdBy.toString() !== (user._id as any).toString()) {
+        return res.status(403).json({ message: 'Permission denied' });
+      }
+    }
+
+    // 出席状況を更新
+    submission.attended = attended;
+    await submission.save();
+
+    res.json({
+      message: 'Attendance updated successfully',
+      submission
+    });
+
+  } catch (error) {
+    console.error('Update attendance error:', error);
+    res.status(500).json({ message: 'Failed to update attendance' });
   }
 });
 

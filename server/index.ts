@@ -5,10 +5,12 @@ import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import { OAuth2Client } from 'google-auth-library';
 
 // モデルのインポート
 import User from './models/User';
+
+// ミドルウェアのインポート
+import { authenticateToken, requireAdmin } from './middleware/auth';
 
 // ルーターのインポート
 import authRoutes from './routes/auth';
@@ -21,9 +23,6 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-
-// Google OAuth2 クライアント
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // MongoDB接続
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/sgformer')
@@ -47,47 +46,6 @@ const limiter = rateLimit({
   message: 'Too many requests from this IP, please try again later.'
 });
 app.use('/api/', limiter);
-
-// 認証ミドルウェア
-export const authenticateToken = async (req: any, res: any, next: any) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ message: 'Access token required' });
-  }
-
-  try {
-    const ticket = await googleClient.verifyIdToken({
-      idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID
-    });
-    
-    const payload = ticket.getPayload();
-    req.user = {
-      id: payload?.sub,
-      email: payload?.email,
-      name: payload?.name,
-      picture: payload?.picture
-    };
-    next();
-  } catch (error) {
-    return res.status(403).json({ message: 'Invalid token' });
-  }
-};
-
-// 管理者権限チェックミドルウェア
-export const requireAdmin = async (req: any, res: any, next: any) => {
-  try {
-    const user = await User.findOne({ email: req.user.email });
-    if (!user || user.role !== 'admin') {
-      return res.status(403).json({ message: 'Admin access required' });
-    }
-    next();
-  } catch (error) {
-    return res.status(500).json({ message: 'Server error' });
-  }
-};
 
 // ルート
 app.use('/api/auth', authRoutes);

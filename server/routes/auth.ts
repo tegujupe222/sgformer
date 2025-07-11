@@ -1,6 +1,7 @@
 import express from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User';
+import { generateToken, authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -49,9 +50,13 @@ router.post('/google', async (req, res) => {
       await user.save();
     }
 
+    // JWTトークン生成
+    const token = generateToken(user);
+
     // レスポンス
     res.json({
       message: 'Login successful',
+      token,
       user: {
         id: user._id,
         email: user.email,
@@ -68,29 +73,10 @@ router.post('/google', async (req, res) => {
   }
 });
 
-// ユーザー情報取得
-router.get('/me', async (req, res) => {
+// ユーザー情報取得（認証済みユーザーのみ）
+router.get('/me', authenticateToken, async (req: any, res) => {
   try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) {
-      return res.status(401).json({ message: 'Access token required' });
-    }
-
-    // Googleトークンの検証
-    const ticket = await googleClient.verifyIdToken({
-      idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID
-    });
-
-    const payload = ticket.getPayload();
-    if (!payload) {
-      return res.status(401).json({ message: 'Invalid token' });
-    }
-
-    // ユーザー情報取得
-    const user = await User.findOne({ googleId: payload.sub });
+    const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -117,32 +103,16 @@ router.get('/me', async (req, res) => {
   }
 });
 
-// ログアウト（クライアントサイドでトークンを削除するため、サーバーサイドでは特別な処理は不要）
+// ログアウト
 router.post('/logout', (req, res) => {
+  // JWTトークンはクライアントサイドで削除するため、サーバーサイドでは特別な処理は不要
   res.json({ message: 'Logout successful' });
 });
 
-// 管理者権限の確認
-router.get('/admin-check', async (req, res) => {
+// 管理者権限の確認（認証済みユーザーのみ）
+router.get('/admin-check', authenticateToken, async (req: any, res) => {
   try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) {
-      return res.status(401).json({ message: 'Access token required' });
-    }
-
-    const ticket = await googleClient.verifyIdToken({
-      idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID
-    });
-
-    const payload = ticket.getPayload();
-    if (!payload) {
-      return res.status(401).json({ message: 'Invalid token' });
-    }
-
-    const user = await User.findOne({ googleId: payload.sub });
+    const user = await User.findById(req.user.id);
     if (!user || user.role !== 'admin') {
       return res.status(403).json({ message: 'Admin access required' });
     }

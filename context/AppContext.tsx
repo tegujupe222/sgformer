@@ -1,105 +1,218 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import type { User, EventForm, Submission } from '../types';
-import { getMockForms, getMockSubmissions } from '../services/mockApi';
+import { authApi, formsApi, submissionsApi, ApiError } from '../services/api';
 
 interface AppContextType {
   user: User | null;
-  login: (role: 'admin' | 'user') => void;
-  logout: () => void;
+  isLoading: boolean;
+  error: string | null;
+  login: (idToken: string) => Promise<void>;
+  logout: () => Promise<void>;
   forms: EventForm[];
   submissions: Submission[];
-  addForm: (form: EventForm) => void;
-  updateForm: (form: EventForm) => void;
-  deleteForm: (formId: string) => void;
-  addSubmission: (submission: Submission) => void;
-  updateSubmission: (submission: Submission) => void;
+  addForm: (form: Omit<EventForm, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateForm: (form: EventForm) => Promise<void>;
+  deleteForm: (formId: string) => Promise<void>;
+  addSubmission: (submission: Omit<Submission, 'id' | 'submittedAt'>) => Promise<void>;
+  updateSubmission: (submission: Submission) => Promise<void>;
+  markAttendance: (submissionId: string, attended: boolean) => Promise<void>;
   getFormById: (id: string) => EventForm | undefined;
   getSubmissionsByFormId: (formId: string) => Submission[];
   getSubmissionById: (id: string) => Submission | undefined;
+  refreshData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const useLocalStorage = <T,>(key: string, initialValue: T): [T, React.Dispatch<React.SetStateAction<T>>] => {
-  const [storedValue, setStoredValue] = useState<T>(() => {
-    try {
-      const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
-    } catch (error) {
-      console.error(error);
-      return initialValue;
-    }
-  });
+type AppProviderProps = { children: ReactNode };
 
-  const setValue = (value: T | ((val: T) => T)) => {
-    try {
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
-      setStoredValue(valueToStore);
-      window.localStorage.setItem(key, JSON.stringify(valueToStore));
-    } catch (error) {
-      console.error(error);
-    }
-  };
+export const AppProvider = ({ children }: AppProviderProps) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [forms, setForms] = useState<EventForm[]>([]);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  return [storedValue, setValue];
-};
-
-type AppProviderProps = { children: React.ReactNode };
-export const AppProvider = (props: any) => {
-  const { children } = props;
-  const [user, setUser] = useLocalStorage<User | null>('sgformer-user', null);
-  const [forms, setForms] = useLocalStorage<EventForm[]>('sgformer-forms', []);
-  const [submissions, setSubmissions] = useLocalStorage<Submission[]>('sgformer-submissions', []);
-  const [initialized, setInitialized] = useState(false);
-
+  // 初期化時にトークンをチェックしてユーザー情報を取得
   useEffect(() => {
-    if (!initialized) {
-        const initialForms = getMockForms();
-        const initialSubmissions = getMockSubmissions();
-        if(localStorage.getItem('sgformer-forms') === null) {
-            setForms(initialForms);
+    const initializeApp = async () => {
+      try {
+        const token = localStorage.getItem('sgformer-token');
+        if (token) {
+          const { user: userData } = await authApi.getMe();
+          setUser(userData);
+          await loadData();
         }
-        if(localStorage.getItem('sgformer-submissions') === null) {
-            setSubmissions(initialSubmissions);
-        }
-        setInitialized(true);
-    }
-  }, [initialized, setForms, setSubmissions]);
-
-
-  const login = (role: 'admin' | 'user') => {
-    const mockUser: User = {
-      id: role === 'admin' ? 'admin001' : 'user123',
-      name: role === 'admin' ? '管理者' : '山田 太郎',
-      email: role === 'admin' ? 'admin@sgformer.edu' : 'yamada.taro@example.com',
-      role: role,
+      } catch (error) {
+        console.error('Initialization error:', error);
+        localStorage.removeItem('sgformer-token');
+      } finally {
+        setIsLoading(false);
+      }
     };
-    setUser(mockUser);
+
+    initializeApp();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const [formsData, submissionsData] = await Promise.all([
+        formsApi.getForms(),
+        submissionsApi.getSubmissions()
+      ]);
+      setForms(formsData);
+      setSubmissions(submissionsData);
+    } catch (error) {
+      console.error('Data loading error:', error);
+      setError('データの読み込みに失敗しました');
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    window.location.hash = '/login';
+  const login = async (idToken: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const { user: userData } = await authApi.googleLogin(idToken);
+      setUser(userData);
+      await loadData();
+    } catch (error) {
+      console.error('Login error:', error);
+      if (error instanceof ApiError) {
+        setError(error.message);
+      } else {
+        setError('ログインに失敗しました');
+      }
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const addForm = (form: EventForm) => setForms(prev => [...prev, form]);
-  const updateForm = (updatedForm: EventForm) => setForms(prev => prev.map(f => f.id === updatedForm.id ? updatedForm : f));
-  const deleteForm = (formId: string) => {
-    setForms(prev => prev.filter(f => f.id !== formId));
-    setSubmissions(prev => prev.filter(s => s.formId !== formId));
+  const logout = async () => {
+    try {
+      await authApi.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+      setForms([]);
+      setSubmissions([]);
+      window.location.hash = '/login';
+    }
   };
-  
-  const addSubmission = (submission: Submission) => setSubmissions(prev => [...prev, submission]);
-  const updateSubmission = (updatedSubmission: Submission) => setSubmissions(prev => prev.map(s => s.id === updatedSubmission.id ? updatedSubmission : s));
+
+  const addForm = async (form: Omit<EventForm, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      setError(null);
+      const newForm = await formsApi.createForm(form);
+      setForms(prev => [...prev, newForm]);
+    } catch (error) {
+      console.error('Add form error:', error);
+      if (error instanceof ApiError) {
+        setError(error.message);
+      } else {
+        setError('フォームの作成に失敗しました');
+      }
+      throw error;
+    }
+  };
+
+  const updateForm = async (updatedForm: EventForm) => {
+    try {
+      setError(null);
+      const { id, ...formData } = updatedForm;
+      const updated = await formsApi.updateForm(id, formData);
+      setForms(prev => prev.map(f => f.id === id ? updated : f));
+    } catch (error) {
+      console.error('Update form error:', error);
+      if (error instanceof ApiError) {
+        setError(error.message);
+      } else {
+        setError('フォームの更新に失敗しました');
+      }
+      throw error;
+    }
+  };
+
+  const deleteForm = async (formId: string) => {
+    try {
+      setError(null);
+      await formsApi.deleteForm(formId);
+      setForms(prev => prev.filter(f => f.id !== formId));
+      setSubmissions(prev => prev.filter(s => s.formId !== formId));
+    } catch (error) {
+      console.error('Delete form error:', error);
+      if (error instanceof ApiError) {
+        setError(error.message);
+      } else {
+        setError('フォームの削除に失敗しました');
+      }
+      throw error;
+    }
+  };
+
+  const addSubmission = async (submission: Omit<Submission, 'id' | 'submittedAt'>) => {
+    try {
+      setError(null);
+      const newSubmission = await submissionsApi.createSubmission(submission);
+      setSubmissions(prev => [...prev, newSubmission]);
+    } catch (error) {
+      console.error('Add submission error:', error);
+      if (error instanceof ApiError) {
+        setError(error.message);
+      } else {
+        setError('提出物の作成に失敗しました');
+      }
+      throw error;
+    }
+  };
+
+  const updateSubmission = async (updatedSubmission: Submission) => {
+    try {
+      setError(null);
+      const { id, ...submissionData } = updatedSubmission;
+      const updated = await submissionsApi.updateSubmission(id, submissionData);
+      setSubmissions(prev => prev.map(s => s.id === id ? updated : s));
+    } catch (error) {
+      console.error('Update submission error:', error);
+      if (error instanceof ApiError) {
+        setError(error.message);
+      } else {
+        setError('提出物の更新に失敗しました');
+      }
+      throw error;
+    }
+  };
+
+  const markAttendance = async (submissionId: string, attended: boolean) => {
+    try {
+      setError(null);
+      const updated = await submissionsApi.markAttendance(submissionId, attended);
+      setSubmissions(prev => prev.map(s => s.id === submissionId ? updated : s));
+    } catch (error) {
+      console.error('Mark attendance error:', error);
+      if (error instanceof ApiError) {
+        setError(error.message);
+      } else {
+        setError('出席確認の更新に失敗しました');
+      }
+      throw error;
+    }
+  };
 
   const getFormById = (id: string) => forms.find(f => f.id === id);
   const getSubmissionsByFormId = (formId: string) => submissions.filter(s => s.formId === formId);
   const getSubmissionById = (id: string) => submissions.find(s => s.id === id);
 
+  const refreshData = async () => {
+    await loadData();
+  };
 
   const value = {
     user,
+    isLoading,
+    error,
     login,
     logout,
     forms,
@@ -109,9 +222,11 @@ export const AppProvider = (props: any) => {
     deleteForm,
     addSubmission,
     updateSubmission,
+    markAttendance,
     getFormById,
     getSubmissionsByFormId,
     getSubmissionById,
+    refreshData,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
