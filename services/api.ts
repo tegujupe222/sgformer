@@ -96,28 +96,4 @@ export const updateSubmission = async (
   }
 };
 
-// AI補完API
-export const getAISuggestion = async (
-  prompt: string, 
-  context?: string, 
-  type?: string
-): Promise<ApiResponse<{ suggestion: string; type: string }>> => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/ai-suggest`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ prompt, context, type }),
-    });
-
-    const result = await response.json();
-    return result;
-  } catch (error) {
-    console.error('AI suggestion error:', error);
-    return {
-      success: false,
-      message: 'AI補完の取得に失敗しました'
-    };
-  }
-}; 
+ 
