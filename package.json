@@ -16,7 +16,7 @@
     "type": "git",
     "url": "https://github.com/your-username/sgformer.git"
   },
-  "homepage": "https://your-username.github.io/sgformer",
+  "homepage": "https://tegujupe222.github.io/sgformer",
   "bugs": {
     "url": "https://github.com/your-username/sgformer/issues"
   },
@@ -29,6 +29,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "deploy": "npm run build && gh-pages -d dist",
     "type-check": "tsc --noEmit",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --ext ts,tsx --fix",
@@ -55,6 +56,7 @@
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "gh-pages": "^6.3.0",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.0",
     "postcss": "^8.4.38",

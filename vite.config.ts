@@ -5,6 +5,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }: { mode: string }) => {
     const env = loadEnv(mode, '.', '');
     return {
+      base: '/sgformer/', // GitHub Pages用のベースパス
       plugins: [react()],
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
