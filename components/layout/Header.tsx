@@ -1,5 +1,5 @@
 import React from 'react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 import { LogoutIcon } from '../ui/Icons';
 import { useTranslation } from '../../utils/i18n';
 

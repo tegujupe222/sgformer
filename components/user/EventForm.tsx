@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 import PageWrapper from '../layout/PageWrapper';
 import { ArrowLeftIcon } from '../ui/Icons';
 import { submissionsApi } from '../../services/api';

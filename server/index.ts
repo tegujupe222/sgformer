@@ -70,10 +70,11 @@ app.use(
     err: Error,
     req: express.Request,
     res: express.Response,
-    _next: express.NextFunction
+    next: express.NextFunction
   ) => {
     // Error stack logged
     res.status(500).json({ message: 'Something went wrong!' });
+    next();
   }
 );
 

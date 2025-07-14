@@ -25,16 +25,25 @@ module.exports = {
       'warn',
       { allowConstantExport: true },
     ],
-    'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    'no-unused-vars': 'off', // TypeScript版を使用
     'react/prop-types': 'off',
     'react/react-in-jsx-scope': 'off',
     'prefer-const': 'error',
     'no-var': 'error',
     'no-console': 'warn',
     '@typescript-eslint/no-require-imports': 'warn',
-    // TypeScript用の追加ルール例
-    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    // TypeScript用のルール
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_',
+      },
+    ],
     '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/prefer-as-const': 'error',
+    '@typescript-eslint/no-unnecessary-type-assertion': 'error',
   },
   ignorePatterns: ['dist', '.eslintrc.cjs', 'server/**/*'],
   settings: {

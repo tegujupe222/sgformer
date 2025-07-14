@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 import PageWrapper from '../layout/PageWrapper';
 import { exportSubmissionsToCSV } from '../../utils/csvExporter';
 import { DownloadIcon, ArrowLeftIcon, CheckCircleIcon } from '../ui/Icons';

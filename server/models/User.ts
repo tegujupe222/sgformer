@@ -51,9 +51,7 @@ const userSchema = new Schema<IUser>(
   }
 );
 
-// インデックス
-userSchema.index({ email: 1 });
-userSchema.index({ googleId: 1 });
+// インデックス（unique: trueで既に定義されているものは除外）
 userSchema.index({ role: 1 });
 
 export default mongoose.model<IUser>('User', userSchema);

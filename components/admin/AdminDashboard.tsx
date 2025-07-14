@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 import { EventForm } from '../../types';
 import { useTranslation } from '../../utils/i18n';
 import AdminSidebar from './AdminSidebar';

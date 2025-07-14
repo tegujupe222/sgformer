@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 import { BellIcon, XIcon, CheckIcon } from './Icons';
 
 interface Notification {

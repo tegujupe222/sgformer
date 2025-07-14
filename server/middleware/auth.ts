@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
-import User from '../models/User';
+import { Document } from 'mongoose';
+import User, { IUser } from '../models/User';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -60,7 +61,7 @@ export const authenticateToken = async (
     }
 
     req.user = {
-      id: (user as any)._id.toString(),
+      id: user._id?.toString() || '',
       email: user.email,
       name: user.name,
       role: user.role,

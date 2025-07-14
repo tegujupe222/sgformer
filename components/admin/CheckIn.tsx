@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 import PageWrapper from '../layout/PageWrapper';
 import type { Submission } from '../../types';
 import { ArrowLeftIcon, CheckCircleIcon, BarcodeIcon } from '../ui/Icons';

@@ -1,10 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from 'react';
+import { createContext, useState, useEffect, ReactNode } from 'react';
 import type { User, EventForm, Submission } from '../types';
 import { authApi, formsApi, submissionsApi, ApiError } from '../services/api';
 
@@ -12,27 +6,27 @@ interface AppContextType {
   user: User | null;
   isLoading: boolean;
   error: string | null;
-  login: (_idToken: string) => Promise<void>;
+  login: (idToken: string) => Promise<void>;
   logout: () => Promise<void>;
   forms: EventForm[];
   submissions: Submission[];
   addForm: (
-    _form: Omit<EventForm, 'id' | 'createdAt' | 'updatedAt'>
+    form: Omit<EventForm, 'id' | 'createdAt' | 'updatedAt'>
   ) => Promise<void>;
-  updateForm: (_form: EventForm) => Promise<void>;
-  deleteForm: (_formId: string) => Promise<void>;
+  updateForm: (form: EventForm) => Promise<void>;
+  deleteForm: (formId: string) => Promise<void>;
   addSubmission: (
-    _submission: Omit<Submission, 'id' | 'submittedAt'>
+    submission: Omit<Submission, 'id' | 'submittedAt'>
   ) => Promise<void>;
-  updateSubmission: (_submission: Submission) => Promise<void>;
-  markAttendance: (_submissionId: string, _attended: boolean) => Promise<void>;
-  getFormById: (_id: string) => EventForm | undefined;
-  getSubmissionsByFormId: (_formId: string) => Submission[];
-  getSubmissionById: (_id: string) => Submission | undefined;
+  updateSubmission: (submission: Submission) => Promise<void>;
+  markAttendance: (submissionId: string, attended: boolean) => Promise<void>;
+  getFormById: (id: string) => EventForm | undefined;
+  getSubmissionsByFormId: (formId: string) => Submission[];
+  getSubmissionById: (id: string) => Submission | undefined;
   refreshData: () => Promise<void>;
 }
 
-const AppContext = createContext<AppContextType | undefined>(undefined);
+export const AppContext = createContext<AppContextType | undefined>(undefined);
 
 type AppProviderProps = { children: ReactNode };
 
@@ -243,10 +237,4 @@ export const AppProvider = ({ children }: AppProviderProps) => {
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
 
-export const useApp = () => {
-  const context = useContext(AppContext);
-  if (context === undefined) {
-    throw new Error('useApp must be used within an AppProvider');
-  }
-  return context;
-};
+// useAppフックは別ファイルに分離

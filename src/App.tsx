@@ -4,7 +4,8 @@ import {
   Route,
   Navigate,
 } from 'react-router-dom';
-import { AppProvider, useApp } from '../context/AppContext';
+import { AppProvider } from '../context/AppContext';
+import { useApp } from '../context/useApp';
 import Login from '../components/auth/Login';
 import AdminDashboard from '../components/admin/AdminDashboard';
 import UserDashboard from '../components/user/UserDashboard';

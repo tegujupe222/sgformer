@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 import PageWrapper from '../layout/PageWrapper';
 import type { Question, QuestionType, QuestionOption } from '../../types';
 import { PlusIcon, TrashIcon } from '../ui/Icons';
