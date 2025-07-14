@@ -1,7 +1,13 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from '../../utils/i18n';
-import { UsersIcon, PlusIcon, DownloadIcon, BarcodeIcon, ChevronRightIcon } from '../ui/Icons';
+import {
+  UsersIcon,
+  PlusIcon,
+  DownloadIcon,
+  BarcodeIcon,
+  ChevronRightIcon,
+} from '../ui/Icons';
 
 const AdminSidebar: React.FC = () => {
   const { admin, navigation } = useTranslation();
@@ -54,4 +60,4 @@ const AdminSidebar: React.FC = () => {
   );
 };
 
-export default AdminSidebar; 
+export default AdminSidebar;

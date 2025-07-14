@@ -13,11 +13,11 @@ router.get('/', async (req, res) => {
 
     // 検索条件の構築
     const filter: any = {};
-    
+
     if (search) {
       filter.$or = [
         { name: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } }
+        { email: { $regex: search, $options: 'i' } },
       ];
     }
 
@@ -42,14 +42,16 @@ router.get('/', async (req, res) => {
 
     // 各ユーザーの統計情報を取得
     const usersWithStats = await Promise.all(
-      users.map(async (user) => {
+      users.map(async user => {
         const formCount = await Form.countDocuments({ createdBy: user._id });
-        const submissionCount = await Submission.countDocuments({ userId: user._id });
-        
+        const submissionCount = await Submission.countDocuments({
+          userId: user._id,
+        });
+
         return {
           ...user,
           formCount,
-          submissionCount
+          submissionCount,
         };
       })
     );
@@ -60,10 +62,9 @@ router.get('/', async (req, res) => {
         page: Number(page),
         limit: Number(limit),
         total,
-        pages: Math.ceil(total / Number(limit))
-      }
+        pages: Math.ceil(total / Number(limit)),
+      },
     });
-
   } catch (error) {
     console.error('Get users error:', error);
     res.status(500).json({ message: 'Failed to get users' });
@@ -74,9 +75,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findById(id)
-      .select('-googleId')
-      .lean();
+    const user = await User.findById(id).select('-googleId').lean();
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -85,7 +84,7 @@ router.get('/:id', async (req, res) => {
     // ユーザーの統計情報を取得
     const formCount = await Form.countDocuments({ createdBy: id });
     const submissionCount = await Submission.countDocuments({ userId: id });
-    
+
     // 最近作成したフォーム
     const recentForms = await Form.find({ createdBy: id })
       .sort({ createdAt: -1 })
@@ -106,9 +105,8 @@ router.get('/:id', async (req, res) => {
       formCount,
       submissionCount,
       recentForms,
-      recentSubmissions
+      recentSubmissions,
     });
-
   } catch (error) {
     console.error('Get user error:', error);
     res.status(500).json({ message: 'Failed to get user' });
@@ -131,8 +129,8 @@ router.put('/:id/role', async (req, res) => {
     }
 
     // 自分自身の権限を変更できないようにする
-    const currentUser = await User.findOne({ email: req.user.email });
-    if (currentUser && currentUser._id.toString() === id) {
+    const currentUser = await User.findOne({ email: (req as any).user.email });
+    if (currentUser && (currentUser as any)._id.toString() === id) {
       return res.status(400).json({ message: 'Cannot change your own role' });
     }
 
@@ -146,10 +144,9 @@ router.put('/:id/role', async (req, res) => {
         email: user.email,
         name: user.name,
         role: user.role,
-        isActive: user.isActive
-      }
+        isActive: user.isActive,
+      },
     });
-
   } catch (error) {
     console.error('Update user role error:', error);
     res.status(500).json({ message: 'Failed to update user role' });
@@ -172,9 +169,11 @@ router.put('/:id/status', async (req, res) => {
     }
 
     // 自分自身のアカウントを無効化できないようにする
-    const currentUser = await User.findOne({ email: req.user.email });
-    if (currentUser && currentUser._id.toString() === id) {
-      return res.status(400).json({ message: 'Cannot deactivate your own account' });
+    const currentUser = await User.findOne({ email: (req as any).user.email });
+    if (currentUser && (currentUser as any)._id.toString() === id) {
+      return res
+        .status(400)
+        .json({ message: 'Cannot deactivate your own account' });
     }
 
     user.isActive = isActive;
@@ -187,10 +186,9 @@ router.put('/:id/status', async (req, res) => {
         email: user.email,
         name: user.name,
         role: user.role,
-        isActive: user.isActive
-      }
+        isActive: user.isActive,
+      },
     });
-
   } catch (error) {
     console.error('Update user status error:', error);
     res.status(500).json({ message: 'Failed to update user status' });
@@ -208,22 +206,23 @@ router.delete('/:id', async (req, res) => {
     }
 
     // 自分自身を削除できないようにする
-    const currentUser = await User.findOne({ email: req.user.email });
-    if (currentUser && currentUser._id.toString() === id) {
-      return res.status(400).json({ message: 'Cannot delete your own account' });
+    const currentUser = await User.findOne({ email: (req as any).user.email });
+    if (currentUser && (currentUser as any)._id.toString() === id) {
+      return res
+        .status(400)
+        .json({ message: 'Cannot delete your own account' });
     }
 
     // ユーザーが作成したフォームを削除
     await Form.deleteMany({ createdBy: id });
-    
+
     // ユーザーの提出物を削除
     await Submission.deleteMany({ userId: id });
-    
+
     // ユーザーを削除
     await User.findByIdAndDelete(id);
 
     res.json({ message: 'User deleted successfully' });
-
   } catch (error) {
     console.error('Delete user error:', error);
     res.status(500).json({ message: 'Failed to delete user' });
@@ -236,12 +235,16 @@ router.get('/stats/overview', async (req, res) => {
     const totalUsers = await User.countDocuments();
     const activeUsers = await User.countDocuments({ isActive: true });
     const adminUsers = await User.countDocuments({ role: 'admin' });
-    
+
     const totalForms = await Form.countDocuments();
-    const activeForms = await Form.countDocuments({ 'settings.isActive': true });
-    
+    const activeForms = await Form.countDocuments({
+      'settings.isActive': true,
+    });
+
     const totalSubmissions = await Submission.countDocuments();
-    const attendedSubmissions = await Submission.countDocuments({ attended: true });
+    const attendedSubmissions = await Submission.countDocuments({
+      attended: true,
+    });
 
     // 最近の登録ユーザー
     const recentUsers = await User.find()
@@ -262,25 +265,27 @@ router.get('/stats/overview', async (req, res) => {
       users: {
         total: totalUsers,
         active: activeUsers,
-        admin: adminUsers
+        admin: adminUsers,
       },
       forms: {
         total: totalForms,
-        active: activeForms
+        active: activeForms,
       },
       submissions: {
         total: totalSubmissions,
         attended: attendedSubmissions,
-        attendanceRate: totalSubmissions > 0 ? (attendedSubmissions / totalSubmissions) * 100 : 0
+        attendanceRate:
+          totalSubmissions > 0
+            ? (attendedSubmissions / totalSubmissions) * 100
+            : 0,
       },
       recentUsers,
-      recentForms
+      recentForms,
     });
-
   } catch (error) {
     console.error('Get system stats error:', error);
     res.status(500).json({ message: 'Failed to get system statistics' });
   }
 });
 
-export default router; 
+export default router;

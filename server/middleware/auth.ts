@@ -1,15 +1,35 @@
 import jwt from 'jsonwebtoken';
+import { Request, Response, NextFunction } from 'express';
 import User from '../models/User';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
+interface JwtPayload {
+  id: string;
+  email: string;
+  role: string;
+}
+
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+  };
+}
+
 // JWTトークン生成
-export const generateToken = (user: any) => {
+export const generateToken = (user: {
+  _id: string;
+  email: string;
+  role: string;
+}) => {
   return jwt.sign(
-    { 
-      id: user._id, 
-      email: user.email, 
-      role: user.role 
+    {
+      id: user._id,
+      email: user.email,
+      role: user.role,
     },
     JWT_SECRET,
     { expiresIn: '7d' }
@@ -17,7 +37,11 @@ export const generateToken = (user: any) => {
 };
 
 // 認証ミドルウェア
-export const authenticateToken = async (req: any, res: any, next: any) => {
+export const authenticateToken = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -27,8 +51,8 @@ export const authenticateToken = async (req: any, res: any, next: any) => {
 
   try {
     // JWTトークンの検証
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
-    
+    const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+
     // ユーザーの存在確認
     const user = await User.findById(decoded.id);
     if (!user || !user.isActive) {
@@ -36,21 +60,25 @@ export const authenticateToken = async (req: any, res: any, next: any) => {
     }
 
     req.user = {
-      id: user._id,
+      id: (user as any)._id.toString(),
       email: user.email,
       name: user.name,
-      role: user.role
+      role: user.role,
     };
     next();
-  } catch (error) {
+  } catch {
     return res.status(403).json({ message: 'Invalid token' });
   }
 };
 
 // 管理者権限チェックミドルウェア
-export const requireAdmin = async (req: any, res: any, next: any) => {
-  if (req.user.role !== 'admin') {
+export const requireAdmin = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  if (req.user?.role !== 'admin') {
     return res.status(403).json({ message: 'Admin access required' });
   }
   next();
-}; 
+};

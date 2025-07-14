@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { LogoutIcon } from '../ui/Icons';
@@ -15,7 +14,9 @@ const Header: React.FC = () => {
           <span className="font-light">SG</span>former
         </h1>
         <div className="flex items-center">
-          <span className="text-white mr-4 hidden sm:inline">{dashboard('welcome')}, {user?.name}</span>
+          <span className="text-white mr-4 hidden sm:inline">
+            {dashboard('welcome')}, {user?.name}
+          </span>
           <button
             onClick={logout}
             className="flex items-center px-3 py-2 bg-brand-secondary text-white text-sm font-medium rounded-md hover:bg-brand-accent transition-colors"

@@ -103,4 +103,4 @@ export const useTranslation = () => {
     app: i18n.app.bind(i18n),
     locale: i18n.getLocale(),
   };
-}; 
+};

@@ -13,7 +13,7 @@ router.get('/', async (req: any, res) => {
 
     // 検索条件の構築
     const filter: any = {};
-    
+
     if (formId) {
       filter.formId = formId;
     }
@@ -21,7 +21,7 @@ router.get('/', async (req: any, res) => {
     if (search) {
       filter.$or = [
         { userName: { $regex: search, $options: 'i' } },
-        { userEmail: { $regex: search, $options: 'i' } }
+        { userEmail: { $regex: search, $options: 'i' } },
       ];
     }
 
@@ -32,7 +32,9 @@ router.get('/', async (req: any, res) => {
     // 管理者の場合は自分が作成したフォームの提出物のみ
     const user = await User.findOne({ email: req.user.email });
     if (user?.role === 'admin') {
-      const userForms = await Form.find({ createdBy: user._id as any }).select('_id');
+      const userForms = await Form.find({ createdBy: user._id as any }).select(
+        '_id'
+      );
       const formIds = userForms.map((form: any) => form._id);
       filter.formId = { $in: formIds };
     }
@@ -53,10 +55,9 @@ router.get('/', async (req: any, res) => {
         page: Number(page),
         limit: Number(limit),
         total,
-        pages: Math.ceil(total / Number(limit))
-      }
+        pages: Math.ceil(total / Number(limit)),
+      },
     });
-
   } catch (error) {
     console.error('Get submissions error:', error);
     res.status(500).json({ message: 'Failed to get submissions' });
@@ -86,7 +87,6 @@ router.get('/:id', async (req: any, res) => {
     }
 
     res.json(submission);
-
   } catch (error) {
     console.error('Get submission error:', error);
     res.status(500).json({ message: 'Failed to get submission' });
@@ -133,10 +133,10 @@ router.post('/', async (req, res) => {
 
     // ユーザーIDの取得（ログインしている場合）
     let userId = undefined;
-    if (req.user) {
-      const user = await User.findOne({ email: req.user.email });
+    if ((req as any).user) {
+      const user = await User.findOne({ email: (req as any).user.email });
       if (user) {
-        userId = user._id;
+        userId = (user as any)._id;
       }
     }
 
@@ -144,42 +144,69 @@ router.post('/', async (req, res) => {
     if (userId) {
       const existingSubmission = await Submission.findOne({ formId, userId });
       if (existingSubmission) {
-        return res.status(400).json({ message: 'You have already submitted this form' });
+        return res
+          .status(400)
+          .json({ message: 'You have already submitted this form' });
       }
     }
 
     // メールアドレスの重複チェック
-    const existingSubmissionByEmail = await Submission.findOne({ formId, userEmail });
+    const existingSubmissionByEmail = await Submission.findOne({
+      formId,
+      userEmail,
+    });
     if (existingSubmissionByEmail) {
-      return res.status(400).json({ message: 'This email has already been used for this form' });
+      return res
+        .status(400)
+        .json({ message: 'This email has already been used for this form' });
     }
 
     // 回答のバリデーション
     const validationErrors = [];
     for (const question of form.questions) {
       const answer = answers.find((a: any) => a.questionId === question.id);
-      
+
       if (question.required && (!answer || !answer.value)) {
         validationErrors.push(`${question.label} is required`);
       }
 
       if (answer && answer.value) {
         // 文字数制限のチェック
-        if (question.validation?.minLength && String(answer.value).length < question.validation.minLength) {
-          validationErrors.push(`${question.label} must be at least ${question.validation.minLength} characters`);
+        if (
+          question.validation?.minLength &&
+          String(answer.value).length < question.validation.minLength
+        ) {
+          validationErrors.push(
+            `${question.label} must be at least ${question.validation.minLength} characters`
+          );
         }
-        if (question.validation?.maxLength && String(answer.value).length > question.validation.maxLength) {
-          validationErrors.push(`${question.label} must be at most ${question.validation.maxLength} characters`);
+        if (
+          question.validation?.maxLength &&
+          String(answer.value).length > question.validation.maxLength
+        ) {
+          validationErrors.push(
+            `${question.label} must be at most ${question.validation.maxLength} characters`
+          );
         }
 
         // 数値の範囲チェック
         if (question.type === 'number' && question.validation) {
           const numValue = Number(answer.value);
-          if (question.validation.min !== undefined && numValue < question.validation.min) {
-            validationErrors.push(`${question.label} must be at least ${question.validation.min}`);
+          if (
+            question.validation.min !== undefined &&
+            numValue < question.validation.min
+          ) {
+            validationErrors.push(
+              `${question.label} must be at least ${question.validation.min}`
+            );
           }
-          if (question.validation.max !== undefined && numValue > question.validation.max) {
-            validationErrors.push(`${question.label} must be at most ${question.validation.max}`);
+          if (
+            question.validation.max !== undefined &&
+            numValue > question.validation.max
+          ) {
+            validationErrors.push(
+              `${question.label} must be at most ${question.validation.max}`
+            );
           }
         }
 
@@ -187,16 +214,18 @@ router.post('/', async (req, res) => {
         if (question.type === 'email') {
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           if (!emailRegex.test(String(answer.value))) {
-            validationErrors.push(`${question.label} must be a valid email address`);
+            validationErrors.push(
+              `${question.label} must be a valid email address`
+            );
           }
         }
       }
     }
 
     if (validationErrors.length > 0) {
-      return res.status(400).json({ 
-        message: 'Validation errors', 
-        errors: validationErrors 
+      return res.status(400).json({
+        message: 'Validation errors',
+        errors: validationErrors,
       });
     }
 
@@ -211,17 +240,16 @@ router.post('/', async (req, res) => {
       metadata: {
         ipAddress: req.ip,
         userAgent: req.get('User-Agent'),
-        referrer: req.get('Referer')
-      }
+        referrer: req.get('Referer'),
+      },
     });
 
     await submission.save();
 
     res.status(201).json({
       message: 'Submission created successfully',
-      submission
+      submission,
     });
-
   } catch (error) {
     console.error('Create submission error:', error);
     res.status(500).json({ message: 'Failed to create submission' });
@@ -257,9 +285,8 @@ router.put('/:id', async (req: any, res) => {
 
     res.json({
       message: 'Submission updated successfully',
-      submission
+      submission,
     });
-
   } catch (error) {
     console.error('Update submission error:', error);
     res.status(500).json({ message: 'Failed to update submission' });
@@ -288,7 +315,6 @@ router.delete('/:id', async (req: any, res) => {
     await Submission.findByIdAndDelete(id);
 
     res.json({ message: 'Submission deleted successfully' });
-
   } catch (error) {
     console.error('Delete submission error:', error);
     res.status(500).json({ message: 'Failed to delete submission' });
@@ -333,11 +359,13 @@ router.get('/:formId/export', async (req: any, res) => {
           new Date(submission.submittedAt).toLocaleString('ja-JP'),
           submission.userName,
           submission.userEmail,
-          submission.attended ? '出席' : '欠席'
+          submission.attended ? '出席' : '欠席',
         ];
 
         form.questions.forEach(question => {
-          const answer = submission.answers.find(a => a.questionId === question.id);
+          const answer = submission.answers.find(
+            a => a.questionId === question.id
+          );
           row.push(answer ? String(answer.value) : '');
         });
 
@@ -347,12 +375,14 @@ router.get('/:formId/export', async (req: any, res) => {
       const csv = [headers.join(','), ...csvData].join('\n');
 
       res.setHeader('Content-Type', 'text/csv');
-      res.setHeader('Content-Disposition', `attachment; filename="submissions_${formId}.csv"`);
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="submissions_${formId}.csv"`
+      );
       res.send(csv);
     } else {
       res.json({ submissions });
     }
-
   } catch (error) {
     console.error('Export submissions error:', error);
     res.status(500).json({ message: 'Failed to export submissions' });
@@ -366,7 +396,9 @@ router.patch('/:id/attendance', async (req: any, res) => {
     const { attended } = req.body;
 
     if (typeof attended !== 'boolean') {
-      return res.status(400).json({ message: 'attended must be a boolean value' });
+      return res
+        .status(400)
+        .json({ message: 'attended must be a boolean value' });
     }
 
     const submission = await Submission.findById(id);
@@ -389,13 +421,12 @@ router.patch('/:id/attendance', async (req: any, res) => {
 
     res.json({
       message: 'Attendance updated successfully',
-      submission
+      submission,
     });
-
   } catch (error) {
     console.error('Update attendance error:', error);
     res.status(500).json({ message: 'Failed to update attendance' });
   }
 });
 
-export default router; 
+export default router;

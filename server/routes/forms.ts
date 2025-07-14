@@ -13,11 +13,11 @@ router.get('/', async (req, res) => {
 
     // 検索条件の構築
     const filter: any = {};
-    
+
     if (search) {
       filter.$or = [
         { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+        { description: { $regex: search, $options: 'i' } },
       ];
     }
 
@@ -28,9 +28,9 @@ router.get('/', async (req, res) => {
     }
 
     // 管理者の場合は自分が作成したフォームのみ
-    const user = await User.findOne({ email: req.user.email });
+    const user = await User.findOne({ email: (req as any).user.email });
     if (user?.role === 'admin') {
-      filter.createdBy = user._id;
+      filter.createdBy = (user as any)._id;
     }
 
     const forms = await Form.find(filter)
@@ -44,11 +44,13 @@ router.get('/', async (req, res) => {
 
     // 各フォームの提出数を取得
     const formsWithSubmissionCount = await Promise.all(
-      forms.map(async (form) => {
-        const submissionCount = await Submission.countDocuments({ formId: form._id });
+      forms.map(async form => {
+        const submissionCount = await Submission.countDocuments({
+          formId: form._id,
+        });
         return {
           ...form,
-          submissionCount
+          submissionCount,
         };
       })
     );
@@ -59,10 +61,9 @@ router.get('/', async (req, res) => {
         page: Number(page),
         limit: Number(limit),
         total,
-        pages: Math.ceil(total / Number(limit))
-      }
+        pages: Math.ceil(total / Number(limit)),
+      },
     });
-
   } catch (error) {
     console.error('Get forms error:', error);
     res.status(500).json({ message: 'Failed to get forms' });
@@ -82,22 +83,22 @@ router.get('/public', async (req, res) => {
         {
           $or: [
             { 'settings.startDate': { $lte: now } },
-            { 'settings.startDate': { $exists: false } }
-          ]
+            { 'settings.startDate': { $exists: false } },
+          ],
         },
         {
           $or: [
             { 'settings.endDate': { $gte: now } },
-            { 'settings.endDate': { $exists: false } }
-          ]
-        }
-      ]
+            { 'settings.endDate': { $exists: false } },
+          ],
+        },
+      ],
     })
-    .select('title description settings createdAt')
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(Number(limit))
-    .lean();
+      .select('title description settings createdAt')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
+      .lean();
 
     const total = await Form.countDocuments({
       'settings.isActive': true,
@@ -105,16 +106,16 @@ router.get('/public', async (req, res) => {
         {
           $or: [
             { 'settings.startDate': { $lte: now } },
-            { 'settings.startDate': { $exists: false } }
-          ]
+            { 'settings.startDate': { $exists: false } },
+          ],
         },
         {
           $or: [
             { 'settings.endDate': { $gte: now } },
-            { 'settings.endDate': { $exists: false } }
-          ]
-        }
-      ]
+            { 'settings.endDate': { $exists: false } },
+          ],
+        },
+      ],
     });
 
     res.json({
@@ -123,10 +124,9 @@ router.get('/public', async (req, res) => {
         page: Number(page),
         limit: Number(limit),
         total,
-        pages: Math.ceil(total / Number(limit))
-      }
+        pages: Math.ceil(total / Number(limit)),
+      },
     });
-
   } catch (error) {
     console.error('Get public forms error:', error);
     res.status(500).json({ message: 'Failed to get public forms' });
@@ -150,9 +150,8 @@ router.get('/:id', async (req, res) => {
 
     res.json({
       ...form,
-      submissionCount
+      submissionCount,
     });
-
   } catch (error) {
     console.error('Get form error:', error);
     res.status(500).json({ message: 'Failed to get form' });
@@ -166,10 +165,12 @@ router.post('/', async (req, res) => {
 
     // バリデーション
     if (!title || !questions || questions.length === 0) {
-      return res.status(400).json({ message: 'Title and questions are required' });
+      return res
+        .status(400)
+        .json({ message: 'Title and questions are required' });
     }
 
-    const user = await User.findOne({ email: req.user.email });
+    const user = await User.findOne({ email: (req as any).user.email });
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -182,20 +183,21 @@ router.post('/', async (req, res) => {
         allowAnonymous: settings?.allowAnonymous || false,
         requireLogin: settings?.requireLogin || true,
         maxSubmissions: settings?.maxSubmissions,
-        startDate: settings?.startDate ? new Date(settings.startDate) : undefined,
+        startDate: settings?.startDate
+          ? new Date(settings.startDate)
+          : undefined,
         endDate: settings?.endDate ? new Date(settings.endDate) : undefined,
-        isActive: settings?.isActive !== false
+        isActive: settings?.isActive !== false,
       },
-      createdBy: user._id
+      createdBy: (user as any)._id,
     });
 
     await form.save();
 
     res.status(201).json({
       message: 'Form created successfully',
-      form
+      form,
     });
-
   } catch (error) {
     console.error('Create form error:', error);
     res.status(500).json({ message: 'Failed to create form' });
@@ -214,8 +216,8 @@ router.put('/:id', async (req, res) => {
     }
 
     // 権限チェック
-    const user = await User.findOne({ email: req.user.email });
-    if (!user || form.createdBy.toString() !== user._id.toString()) {
+    const user = await User.findOne({ email: (req as any).user.email });
+    if (!user || form.createdBy.toString() !== (user as any)._id.toString()) {
       return res.status(403).json({ message: 'Permission denied' });
     }
 
@@ -223,13 +225,17 @@ router.put('/:id', async (req, res) => {
     form.title = title || form.title;
     form.description = description || form.description;
     form.questions = questions || form.questions;
-    
+
     if (settings) {
       form.settings = {
         ...form.settings,
         ...settings,
-        startDate: settings.startDate ? new Date(settings.startDate) : form.settings.startDate,
-        endDate: settings.endDate ? new Date(settings.endDate) : form.settings.endDate
+        startDate: settings.startDate
+          ? new Date(settings.startDate)
+          : form.settings.startDate,
+        endDate: settings.endDate
+          ? new Date(settings.endDate)
+          : form.settings.endDate,
       };
     }
 
@@ -237,9 +243,8 @@ router.put('/:id', async (req, res) => {
 
     res.json({
       message: 'Form updated successfully',
-      form
+      form,
     });
-
   } catch (error) {
     console.error('Update form error:', error);
     res.status(500).json({ message: 'Failed to update form' });
@@ -257,19 +262,18 @@ router.delete('/:id', async (req, res) => {
     }
 
     // 権限チェック
-    const user = await User.findOne({ email: req.user.email });
-    if (!user || form.createdBy.toString() !== user._id.toString()) {
+    const user = await User.findOne({ email: (req as any).user.email });
+    if (!user || form.createdBy.toString() !== (user as any)._id.toString()) {
       return res.status(403).json({ message: 'Permission denied' });
     }
 
     // 関連する提出物も削除
     await Submission.deleteMany({ formId: id });
-    
+
     // フォーム削除
     await Form.findByIdAndDelete(id);
 
     res.json({ message: 'Form deleted successfully' });
-
   } catch (error) {
     console.error('Delete form error:', error);
     res.status(500).json({ message: 'Failed to delete form' });
@@ -287,16 +291,16 @@ router.get('/:id/stats', async (req, res) => {
     }
 
     // 権限チェック
-    const user = await User.findOne({ email: req.user.email });
-    if (!user || form.createdBy.toString() !== user._id.toString()) {
+    const user = await User.findOne({ email: (req as any).user.email });
+    if (!user || form.createdBy.toString() !== (user as any)._id.toString()) {
       return res.status(403).json({ message: 'Permission denied' });
     }
 
     // 統計情報を取得
     const totalSubmissions = await Submission.countDocuments({ formId: id });
-    const attendedSubmissions = await Submission.countDocuments({ 
-      formId: id, 
-      attended: true 
+    const attendedSubmissions = await Submission.countDocuments({
+      formId: id,
+      attended: true,
     });
 
     // 最近の提出物
@@ -308,19 +312,22 @@ router.get('/:id/stats', async (req, res) => {
 
     // 質問ごとの回答統計
     const questionStats = await Promise.all(
-      form.questions.map(async (question) => {
-        if (['select', 'radio', 'checkbox'].includes(question.type) && question.options) {
+      form.questions.map(async question => {
+        if (
+          ['select', 'radio', 'checkbox'].includes(question.type) &&
+          question.options
+        ) {
           const optionStats = await Promise.all(
-            question.options.map(async (option) => {
+            question.options.map(async option => {
               const count = await Submission.countDocuments({
                 formId: id,
                 'answers.questionId': question.id,
-                'answers.value': option.value
+                'answers.value': option.value,
               });
               return {
                 label: option.label,
                 value: option.value,
-                count
+                count,
               };
             })
           );
@@ -328,7 +335,7 @@ router.get('/:id/stats', async (req, res) => {
             questionId: question.id,
             label: question.label,
             type: question.type,
-            optionStats
+            optionStats,
           };
         }
         return null;
@@ -338,15 +345,17 @@ router.get('/:id/stats', async (req, res) => {
     res.json({
       totalSubmissions,
       attendedSubmissions,
-      attendanceRate: totalSubmissions > 0 ? (attendedSubmissions / totalSubmissions) * 100 : 0,
+      attendanceRate:
+        totalSubmissions > 0
+          ? (attendedSubmissions / totalSubmissions) * 100
+          : 0,
       recentSubmissions,
-      questionStats: questionStats.filter(Boolean)
+      questionStats: questionStats.filter(Boolean),
     });
-
   } catch (error) {
     console.error('Get form stats error:', error);
     res.status(500).json({ message: 'Failed to get form statistics' });
   }
 });
 
-export default router; 
+export default router;

@@ -1,5 +1,10 @@
-
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
 import type { User, EventForm, Submission } from '../types';
 import { authApi, formsApi, submissionsApi, ApiError } from '../services/api';
 
@@ -7,19 +12,23 @@ interface AppContextType {
   user: User | null;
   isLoading: boolean;
   error: string | null;
-  login: (idToken: string) => Promise<void>;
+  login: (_idToken: string) => Promise<void>;
   logout: () => Promise<void>;
   forms: EventForm[];
   submissions: Submission[];
-  addForm: (form: Omit<EventForm, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
-  updateForm: (form: EventForm) => Promise<void>;
-  deleteForm: (formId: string) => Promise<void>;
-  addSubmission: (submission: Omit<Submission, 'id' | 'submittedAt'>) => Promise<void>;
-  updateSubmission: (submission: Submission) => Promise<void>;
-  markAttendance: (submissionId: string, attended: boolean) => Promise<void>;
-  getFormById: (id: string) => EventForm | undefined;
-  getSubmissionsByFormId: (formId: string) => Submission[];
-  getSubmissionById: (id: string) => Submission | undefined;
+  addForm: (
+    _form: Omit<EventForm, 'id' | 'createdAt' | 'updatedAt'>
+  ) => Promise<void>;
+  updateForm: (_form: EventForm) => Promise<void>;
+  deleteForm: (_formId: string) => Promise<void>;
+  addSubmission: (
+    _submission: Omit<Submission, 'id' | 'submittedAt'>
+  ) => Promise<void>;
+  updateSubmission: (_submission: Submission) => Promise<void>;
+  markAttendance: (_submissionId: string, _attended: boolean) => Promise<void>;
+  getFormById: (_id: string) => EventForm | undefined;
+  getSubmissionsByFormId: (_formId: string) => Submission[];
+  getSubmissionById: (_id: string) => Submission | undefined;
   refreshData: () => Promise<void>;
 }
 
@@ -44,8 +53,8 @@ export const AppProvider = ({ children }: AppProviderProps) => {
           setUser(userData);
           await loadData();
         }
-      } catch (error) {
-        console.error('Initialization error:', error);
+      } catch {
+        // Initialization error handled
         localStorage.removeItem('sgformer-token');
       } finally {
         setIsLoading(false);
@@ -59,12 +68,11 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     try {
       const [formsData, submissionsData] = await Promise.all([
         formsApi.getForms(),
-        submissionsApi.getSubmissions()
+        submissionsApi.getSubmissions(),
       ]);
       setForms(formsData);
       setSubmissions(submissionsData);
-    } catch (error) {
-      console.error('Data loading error:', error);
+    } catch {
       setError('データの読み込みに失敗しました');
     }
   };
@@ -77,7 +85,6 @@ export const AppProvider = ({ children }: AppProviderProps) => {
       setUser(userData);
       await loadData();
     } catch (error) {
-      console.error('Login error:', error);
       if (error instanceof ApiError) {
         setError(error.message);
       } else {
@@ -92,8 +99,8 @@ export const AppProvider = ({ children }: AppProviderProps) => {
   const logout = async () => {
     try {
       await authApi.logout();
-    } catch (error) {
-      console.error('Logout error:', error);
+    } catch {
+      // Logout error handled silently
     } finally {
       setUser(null);
       setForms([]);
@@ -102,13 +109,14 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     }
   };
 
-  const addForm = async (form: Omit<EventForm, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addForm = async (
+    form: Omit<EventForm, 'id' | 'createdAt' | 'updatedAt'>
+  ) => {
     try {
       setError(null);
       const newForm = await formsApi.createForm(form);
       setForms(prev => [...prev, newForm]);
     } catch (error) {
-      console.error('Add form error:', error);
       if (error instanceof ApiError) {
         setError(error.message);
       } else {
@@ -123,9 +131,8 @@ export const AppProvider = ({ children }: AppProviderProps) => {
       setError(null);
       const { id, ...formData } = updatedForm;
       const updated = await formsApi.updateForm(id, formData);
-      setForms(prev => prev.map(f => f.id === id ? updated : f));
+      setForms(prev => prev.map(f => (f.id === id ? updated : f)));
     } catch (error) {
-      console.error('Update form error:', error);
       if (error instanceof ApiError) {
         setError(error.message);
       } else {
@@ -142,7 +149,6 @@ export const AppProvider = ({ children }: AppProviderProps) => {
       setForms(prev => prev.filter(f => f.id !== formId));
       setSubmissions(prev => prev.filter(s => s.formId !== formId));
     } catch (error) {
-      console.error('Delete form error:', error);
       if (error instanceof ApiError) {
         setError(error.message);
       } else {
@@ -152,13 +158,14 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     }
   };
 
-  const addSubmission = async (submission: Omit<Submission, 'id' | 'submittedAt'>) => {
+  const addSubmission = async (
+    submission: Omit<Submission, 'id' | 'submittedAt'>
+  ) => {
     try {
       setError(null);
       const newSubmission = await submissionsApi.createSubmission(submission);
       setSubmissions(prev => [...prev, newSubmission]);
     } catch (error) {
-      console.error('Add submission error:', error);
       if (error instanceof ApiError) {
         setError(error.message);
       } else {
@@ -173,9 +180,8 @@ export const AppProvider = ({ children }: AppProviderProps) => {
       setError(null);
       const { id, ...submissionData } = updatedSubmission;
       const updated = await submissionsApi.updateSubmission(id, submissionData);
-      setSubmissions(prev => prev.map(s => s.id === id ? updated : s));
+      setSubmissions(prev => prev.map(s => (s.id === id ? updated : s)));
     } catch (error) {
-      console.error('Update submission error:', error);
       if (error instanceof ApiError) {
         setError(error.message);
       } else {
@@ -188,10 +194,14 @@ export const AppProvider = ({ children }: AppProviderProps) => {
   const markAttendance = async (submissionId: string, attended: boolean) => {
     try {
       setError(null);
-      const updated = await submissionsApi.markAttendance(submissionId, attended);
-      setSubmissions(prev => prev.map(s => s.id === submissionId ? updated : s));
+      const updated = await submissionsApi.markAttendance(
+        submissionId,
+        attended
+      );
+      setSubmissions(prev =>
+        prev.map(s => (s.id === submissionId ? updated : s))
+      );
     } catch (error) {
-      console.error('Mark attendance error:', error);
       if (error instanceof ApiError) {
         setError(error.message);
       } else {
@@ -202,7 +212,8 @@ export const AppProvider = ({ children }: AppProviderProps) => {
   };
 
   const getFormById = (id: string) => forms.find(f => f.id === id);
-  const getSubmissionsByFormId = (formId: string) => submissions.filter(s => s.formId === formId);
+  const getSubmissionsByFormId = (formId: string) =>
+    submissions.filter(s => s.formId === formId);
   const getSubmissionById = (id: string) => submissions.find(s => s.id === id);
 
   const refreshData = async () => {

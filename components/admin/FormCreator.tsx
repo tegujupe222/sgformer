@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 import PageWrapper from '../layout/PageWrapper';
 import type { Question, QuestionType, QuestionOption } from '../../types';
-import { PlusIcon, TrashIcon, ChevronDownIcon } from '../ui/Icons';
+import { PlusIcon, TrashIcon } from '../ui/Icons';
 
 const FormCreator: React.FC = () => {
   const { addForm, updateForm, getFormById } = useApp();
@@ -22,19 +21,43 @@ const FormCreator: React.FC = () => {
 
   const isEditing = Boolean(formId);
 
-  const questionTypes: { value: QuestionType; label: string; description: string }[] = [
+  const questionTypes: {
+    value: QuestionType;
+    label: string;
+    description: string;
+  }[] = [
     { value: 'text', label: 'テキスト入力', description: '1行のテキスト入力' },
-    { value: 'textarea', label: 'テキストエリア', description: '複数行のテキスト入力' },
-    { value: 'email', label: 'メールアドレス', description: 'メールアドレス入力' },
+    {
+      value: 'textarea',
+      label: 'テキストエリア',
+      description: '複数行のテキスト入力',
+    },
+    {
+      value: 'email',
+      label: 'メールアドレス',
+      description: 'メールアドレス入力',
+    },
     { value: 'phone', label: '電話番号', description: '電話番号入力' },
     { value: 'number', label: '数値', description: '数値入力' },
-    { value: 'select', label: 'ドロップダウン選択', description: '選択肢から1つ選択' },
+    {
+      value: 'select',
+      label: 'ドロップダウン選択',
+      description: '選択肢から1つ選択',
+    },
     { value: 'radio', label: 'ラジオボタン', description: '選択肢から1つ選択' },
-    { value: 'checkbox', label: 'チェックボックス', description: '複数選択可能' },
+    {
+      value: 'checkbox',
+      label: 'チェックボックス',
+      description: '複数選択可能',
+    },
     { value: 'date', label: '日付', description: '日付選択' },
     { value: 'time', label: '時間', description: '時間選択' },
     { value: 'datetime', label: '日時', description: '日時選択' },
-    { value: 'file', label: 'ファイルアップロード', description: 'ファイルをアップロード' },
+    {
+      value: 'file',
+      label: 'ファイルアップロード',
+      description: 'ファイルをアップロード',
+    },
     { value: 'rating', label: '評価', description: '星評価（1-5）' },
     { value: 'scale', label: 'スケール', description: '数値スケール（1-10）' },
     { value: 'yesno', label: 'はい/いいえ', description: 'はいまたはいいえ' },
@@ -75,10 +98,31 @@ const FormCreator: React.FC = () => {
     setQuestions(questions.filter((_, i) => i !== index));
   };
 
-  const updateQuestion = (index: number, field: keyof Question, value: any) => {
-    const newQuestions = [...questions];
-    (newQuestions[index] as any)[field] = value;
-    setQuestions(newQuestions);
+  const handleQuestionChange = (
+    index: number,
+    field: keyof Question,
+    value: string | boolean
+  ) => {
+    const updatedQuestions = [...questions];
+    updatedQuestions[index] = {
+      ...updatedQuestions[index],
+      [field]: value,
+    };
+    setQuestions(updatedQuestions);
+  };
+
+  const handleValidationChange = (
+    index: number,
+    field: string,
+    value: number
+  ) => {
+    const updatedQuestions = [...questions];
+    if (!updatedQuestions[index].validation) {
+      updatedQuestions[index].validation = {};
+    }
+    (updatedQuestions[index].validation as Record<string, unknown>)[field] =
+      value;
+    setQuestions(updatedQuestions);
   };
 
   const addOption = (questionIndex: number) => {
@@ -100,11 +144,22 @@ const FormCreator: React.FC = () => {
     setQuestions(newQuestions);
   };
 
-  const updateOption = (questionIndex: number, optionIndex: number, field: keyof QuestionOption, value: string | number) => {
+  const updateOption = (
+    questionIndex: number,
+    optionIndex: number,
+    field: keyof QuestionOption,
+    value: string | number
+  ) => {
     const newQuestions = [...questions];
     const question = newQuestions[questionIndex];
     if (question.options) {
-      (question.options[optionIndex] as any)[field] = value;
+      if (field === 'label') {
+        question.options[optionIndex].label = value as string;
+      } else if (field === 'value') {
+        question.options[optionIndex].value = value as string;
+      } else if (field === 'limit') {
+        question.options[optionIndex].limit = value as number;
+      }
       setQuestions(newQuestions);
     }
   };
@@ -129,25 +184,32 @@ const FormCreator: React.FC = () => {
         endDate: endDate || undefined,
         isActive: true,
       },
-      createdAt: isEditing ? getFormById(formId!)!.createdAt : new Date().toISOString(),
+      createdAt: isEditing
+        ? getFormById(formId!)!.createdAt
+        : new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       createdBy: 'admin', // TODO: 実際のユーザーIDに置き換え
     };
-    
+
     if (isEditing) {
       updateForm(formToSave);
     } else {
       addForm(formToSave);
     }
-    
+
     navigate('/admin/dashboard');
   };
 
   const renderQuestionEditor = (question: Question, index: number) => {
-    const needsOptions = ['select', 'radio', 'checkbox'].includes(question.type);
-    
+    const needsOptions = ['select', 'radio', 'checkbox'].includes(
+      question.type
+    );
+
     return (
-      <div key={question.id} className="bg-gray-50 rounded-lg border p-4 space-y-4">
+      <div
+        key={question.id}
+        className="bg-gray-50 rounded-lg border p-4 space-y-4"
+      >
         <div className="flex justify-between items-start">
           <h4 className="text-lg font-medium">質問 {index + 1}</h4>
           <button
@@ -161,10 +223,18 @@ const FormCreator: React.FC = () => {
 
         {/* 質問タイプ選択 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">質問タイプ</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            質問タイプ
+          </label>
           <select
             value={question.type}
-            onChange={(e) => updateQuestion(index, 'type', e.target.value as QuestionType)}
+            onChange={e =>
+              handleQuestionChange(
+                index,
+                'type',
+                e.target.value as QuestionType
+              )
+            }
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
           >
             {questionTypes.map(type => (
@@ -177,11 +247,13 @@ const FormCreator: React.FC = () => {
 
         {/* 質問ラベル */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">質問ラベル *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            質問ラベル *
+          </label>
           <input
             type="text"
             value={question.label}
-            onChange={(e) => updateQuestion(index, 'label', e.target.value)}
+            onChange={e => handleQuestionChange(index, 'label', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
             placeholder="質問を入力してください"
             required
@@ -190,10 +262,14 @@ const FormCreator: React.FC = () => {
 
         {/* 質問説明 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">説明（任意）</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            説明（任意）
+          </label>
           <textarea
             value={question.description || ''}
-            onChange={(e) => updateQuestion(index, 'description', e.target.value)}
+            onChange={e =>
+              handleQuestionChange(index, 'description', e.target.value)
+            }
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
             rows={2}
             placeholder="質問の詳細説明"
@@ -206,7 +282,9 @@ const FormCreator: React.FC = () => {
             <input
               type="checkbox"
               checked={question.required}
-              onChange={(e) => updateQuestion(index, 'required', e.target.checked)}
+              onChange={e =>
+                handleQuestionChange(index, 'required', e.target.checked)
+              }
               className="mr-2"
             />
             <span className="text-sm text-gray-700">必須項目</span>
@@ -215,7 +293,9 @@ const FormCreator: React.FC = () => {
             <input
               type="checkbox"
               checked={question.isPersonalInfo}
-              onChange={(e) => updateQuestion(index, 'isPersonalInfo', e.target.checked)}
+              onChange={e =>
+                handleQuestionChange(index, 'isPersonalInfo', e.target.checked)
+              }
               className="mr-2"
             />
             <span className="text-sm text-gray-700">個人情報</span>
@@ -226,7 +306,9 @@ const FormCreator: React.FC = () => {
         {needsOptions && (
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <label className="block text-sm font-medium text-gray-700">選択肢</label>
+              <label className="block text-sm font-medium text-gray-700">
+                選択肢
+              </label>
               <button
                 type="button"
                 onClick={() => addOption(index)}
@@ -241,21 +323,27 @@ const FormCreator: React.FC = () => {
                 <input
                   type="text"
                   value={option.label}
-                  onChange={(e) => updateOption(index, optionIndex, 'label', e.target.value)}
+                  onChange={e =>
+                    updateOption(index, optionIndex, 'label', e.target.value)
+                  }
                   className="flex-1 px-2 py-1 border border-gray-300 rounded-md"
                   placeholder="選択肢のラベル"
                 />
                 <input
                   type="text"
                   value={option.value}
-                  onChange={(e) => updateOption(index, optionIndex, 'value', e.target.value)}
+                  onChange={e =>
+                    updateOption(index, optionIndex, 'value', e.target.value)
+                  }
                   className="flex-1 px-2 py-1 border border-gray-300 rounded-md"
                   placeholder="選択肢の値"
                 />
                 <input
                   type="number"
                   value={option.limit || ''}
-                  onChange={(e) => updateOption(index, optionIndex, 'limit', e.target.value)}
+                  onChange={e =>
+                    updateOption(index, optionIndex, 'limit', e.target.value)
+                  }
                   className="w-20 px-2 py-1 border border-gray-300 rounded-md"
                   placeholder="定員"
                 />
@@ -273,14 +361,22 @@ const FormCreator: React.FC = () => {
 
         {/* バリデーション設定 */}
         <div className="space-y-3">
-          <h5 className="text-sm font-medium text-gray-700">バリデーション設定</h5>
+          <h5 className="text-sm font-medium text-gray-700">
+            バリデーション設定
+          </h5>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs text-gray-500">最小文字数</label>
               <input
                 type="number"
                 value={question.validation?.minLength || ''}
-                onChange={(e) => updateQuestion(index, 'validation', { ...question.validation, minLength: e.target.value ? Number(e.target.value) : undefined })}
+                onChange={e =>
+                  handleValidationChange(
+                    index,
+                    'minLength',
+                    Number(e.target.value)
+                  )
+                }
                 className="w-full px-2 py-1 border border-gray-300 rounded-md"
               />
             </div>
@@ -289,7 +385,13 @@ const FormCreator: React.FC = () => {
               <input
                 type="number"
                 value={question.validation?.maxLength || ''}
-                onChange={(e) => updateQuestion(index, 'validation', { ...question.validation, maxLength: e.target.value ? Number(e.target.value) : undefined })}
+                onChange={e =>
+                  handleValidationChange(
+                    index,
+                    'maxLength',
+                    Number(e.target.value)
+                  )
+                }
                 className="w-full px-2 py-1 border border-gray-300 rounded-md"
               />
             </div>
@@ -300,19 +402,24 @@ const FormCreator: React.FC = () => {
   };
 
   return (
-    <PageWrapper title={isEditing ? "フォームを編集" : "新しいフォームを作成"}>
+    <PageWrapper title={isEditing ? 'フォームを編集' : '新しいフォームを作成'}>
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* 基本情報 */}
         <div className="bg-white rounded-lg border p-6 space-y-4">
           <h3 className="text-lg font-medium text-gray-900">基本情報</h3>
-          
+
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700">フォームタイトル *</label>
+            <label
+              htmlFor="title"
+              className="block text-sm font-medium text-gray-700"
+            >
+              フォームタイトル *
+            </label>
             <input
               type="text"
               id="title"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={e => setTitle(e.target.value)}
               className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-primary focus:border-brand-primary"
               placeholder="例: 2024年度入学希望者アンケート"
               required
@@ -320,11 +427,16 @@ const FormCreator: React.FC = () => {
           </div>
 
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700">説明</label>
+            <label
+              htmlFor="description"
+              className="block text-sm font-medium text-gray-700"
+            >
+              説明
+            </label>
             <textarea
               id="description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={e => setDescription(e.target.value)}
               rows={3}
               className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-primary focus:border-brand-primary"
               placeholder="フォームの目的や説明を入力してください"
@@ -335,22 +447,24 @@ const FormCreator: React.FC = () => {
         {/* フォーム設定 */}
         <div className="bg-white rounded-lg border p-6 space-y-4">
           <h3 className="text-lg font-medium text-gray-900">フォーム設定</h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">回答期間</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                回答期間
+              </label>
               <div className="space-y-2">
                 <input
                   type="datetime-local"
                   value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+                  onChange={e => setStartDate(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   placeholder="開始日時"
                 />
                 <input
                   type="datetime-local"
                   value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
+                  onChange={e => setEndDate(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   placeholder="終了日時"
                 />
@@ -359,11 +473,17 @@ const FormCreator: React.FC = () => {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">最大回答数</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  最大回答数
+                </label>
                 <input
                   type="number"
                   value={maxSubmissions || ''}
-                  onChange={(e) => setMaxSubmissions(e.target.value ? Number(e.target.value) : undefined)}
+                  onChange={e =>
+                    setMaxSubmissions(
+                      e.target.value ? Number(e.target.value) : undefined
+                    )
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   placeholder="制限なし"
                   min="1"
@@ -375,7 +495,7 @@ const FormCreator: React.FC = () => {
                   <input
                     type="checkbox"
                     checked={allowAnonymous}
-                    onChange={(e) => setAllowAnonymous(e.target.checked)}
+                    onChange={e => setAllowAnonymous(e.target.checked)}
                     className="mr-2"
                   />
                   <span className="text-sm text-gray-700">匿名回答を許可</span>
@@ -384,7 +504,7 @@ const FormCreator: React.FC = () => {
                   <input
                     type="checkbox"
                     checked={requireLogin}
-                    onChange={(e) => setRequireLogin(e.target.checked)}
+                    onChange={e => setRequireLogin(e.target.checked)}
                     className="mr-2"
                   />
                   <span className="text-sm text-gray-700">ログイン必須</span>
@@ -409,24 +529,28 @@ const FormCreator: React.FC = () => {
           </div>
 
           {questions.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">質問を追加してください</p>
+            <p className="text-gray-500 text-center py-8">
+              質問を追加してください
+            </p>
           ) : (
             <div className="space-y-4">
-              {questions.map((question, index) => renderQuestionEditor(question, index))}
+              {questions.map((question, index) =>
+                renderQuestionEditor(question, index)
+              )}
             </div>
           )}
         </div>
-        
+
         <div className="flex justify-end space-x-3 pt-4">
-          <button 
-            type="button" 
-            onClick={() => navigate('/admin/dashboard')} 
+          <button
+            type="button"
+            onClick={() => navigate('/admin/dashboard')}
             className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
           >
             キャンセル
           </button>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="px-6 py-2 bg-brand-primary text-white font-semibold rounded-md shadow-sm hover:bg-brand-secondary"
           >
             {isEditing ? '変更を保存' : 'フォームを作成'}

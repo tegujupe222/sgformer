@@ -1,9 +1,10 @@
 import { User, EventForm, Submission } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 class ApiError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(message: string) {
     super(message);
     this.name = 'ApiError';
   }
@@ -11,8 +12,10 @@ class ApiError extends Error {
 
 const handleResponse = async (response: Response) => {
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new ApiError(response.status, errorData.message || 'API request failed');
+    const errorData = await response.json().catch(() => ({
+      message: 'API request failed',
+    }));
+    throw new ApiError(errorData.message || 'API request failed');
   }
   return response.json();
 };
@@ -28,7 +31,9 @@ const getAuthHeaders = () => {
 // 認証関連のAPI
 export const authApi = {
   // Google認証でログイン
-  googleLogin: async (idToken: string): Promise<{ user: User; token: string }> => {
+  googleLogin: async (
+    idToken: string
+  ): Promise<{ user: User; token: string }> => {
     const response = await fetch(`${API_BASE_URL}/auth/google`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -84,7 +89,9 @@ export const formsApi = {
   },
 
   // フォーム作成
-  createForm: async (form: Omit<EventForm, 'id' | 'createdAt' | 'updatedAt'>): Promise<EventForm> => {
+  createForm: async (
+    form: Omit<EventForm, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<EventForm> => {
     const response = await fetch(`${API_BASE_URL}/forms`, {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -94,7 +101,10 @@ export const formsApi = {
   },
 
   // フォーム更新
-  updateForm: async (id: string, form: Partial<EventForm>): Promise<EventForm> => {
+  updateForm: async (
+    id: string,
+    form: Partial<EventForm>
+  ): Promise<EventForm> => {
     const response = await fetch(`${API_BASE_URL}/forms/${id}`, {
       method: 'PUT',
       headers: getAuthHeaders(),
@@ -117,7 +127,7 @@ export const formsApi = {
 export const submissionsApi = {
   // 提出物一覧取得
   getSubmissions: async (formId?: string): Promise<Submission[]> => {
-    const url = formId 
+    const url = formId
       ? `${API_BASE_URL}/submissions?formId=${formId}`
       : `${API_BASE_URL}/submissions`;
     const response = await fetch(url, {
@@ -135,7 +145,9 @@ export const submissionsApi = {
   },
 
   // 提出物作成
-  createSubmission: async (submission: Omit<Submission, 'id' | 'submittedAt'>): Promise<Submission> => {
+  createSubmission: async (
+    submission: Omit<Submission, 'id' | 'submittedAt'>
+  ): Promise<Submission> => {
     const response = await fetch(`${API_BASE_URL}/submissions`, {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -145,7 +157,10 @@ export const submissionsApi = {
   },
 
   // 提出物更新
-  updateSubmission: async (id: string, submission: Partial<Submission>): Promise<Submission> => {
+  updateSubmission: async (
+    id: string,
+    submission: Partial<Submission>
+  ): Promise<Submission> => {
     const response = await fetch(`${API_BASE_URL}/submissions/${id}`, {
       method: 'PUT',
       headers: getAuthHeaders(),
@@ -164,12 +179,18 @@ export const submissionsApi = {
   },
 
   // 出席確認
-  markAttendance: async (id: string, attended: boolean): Promise<Submission> => {
-    const response = await fetch(`${API_BASE_URL}/submissions/${id}/attendance`, {
-      method: 'PATCH',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ attended }),
-    });
+  markAttendance: async (
+    id: string,
+    attended: boolean
+  ): Promise<Submission> => {
+    const response = await fetch(
+      `${API_BASE_URL}/submissions/${id}/attendance`,
+      {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ attended }),
+      }
+    );
     return handleResponse(response);
   },
 };
@@ -213,5 +234,3 @@ export const usersApi = {
 };
 
 export { ApiError };
-
- 

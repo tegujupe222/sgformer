@@ -6,9 +6,6 @@ import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
-// モデルのインポート
-import User from './models/User';
-
 // ミドルウェアのインポート
 import { authenticateToken, requireAdmin } from './middleware/auth';
 
@@ -17,6 +14,7 @@ import authRoutes from './routes/auth';
 import formRoutes from './routes/forms';
 import submissionRoutes from './routes/submissions';
 import userRoutes from './routes/users';
+import uploadRoutes from './routes/upload';
 
 // 環境変数の読み込み
 dotenv.config();
@@ -25,16 +23,23 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // MongoDB接続
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/sgformer')
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
+mongoose
+  .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/sgformer')
+  .then(() => {
+    // MongoDB connected
+  })
+  .catch(_err => {
+    // MongoDB connection error
+  });
 
 // ミドルウェア
 app.use(helmet());
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    credentials: true,
+  })
+);
 app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -43,7 +48,7 @@ app.use(express.urlencoded({ extended: true }));
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15分
   max: 100, // リクエスト制限
-  message: 'Too many requests from this IP, please try again later.'
+  message: 'Too many requests from this IP, please try again later.',
 });
 app.use('/api/', limiter);
 
@@ -52,6 +57,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/forms', authenticateToken, formRoutes);
 app.use('/api/submissions', authenticateToken, submissionRoutes);
 app.use('/api/users', authenticateToken, requireAdmin, userRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // ヘルスチェック
 app.get('/api/health', (req, res) => {
@@ -59,10 +65,17 @@ app.get('/api/health', (req, res) => {
 });
 
 // エラーハンドリング
-app.use((err: any, req: any, res: any, next: any) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
-});
+app.use(
+  (
+    err: Error,
+    req: express.Request,
+    res: express.Response,
+    _next: express.NextFunction
+  ) => {
+    // Error stack logged
+    res.status(500).json({ message: 'Something went wrong!' });
+  }
+);
 
 // 404ハンドリング
 app.use('*', (req, res) => {
@@ -70,7 +83,7 @@ app.use('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  // Server running on port ${PORT}
 });
 
-export default app; 
+export default app;

@@ -26,7 +26,22 @@ export interface IQuestionSettings {
 
 export interface IQuestion {
   id: string;
-  type: 'text' | 'textarea' | 'email' | 'phone' | 'number' | 'select' | 'radio' | 'checkbox' | 'date' | 'time' | 'datetime' | 'file' | 'rating' | 'scale' | 'yesno';
+  type:
+    | 'text'
+    | 'textarea'
+    | 'email'
+    | 'phone'
+    | 'number'
+    | 'select'
+    | 'radio'
+    | 'checkbox'
+    | 'date'
+    | 'time'
+    | 'datetime'
+    | 'file'
+    | 'rating'
+    | 'scale'
+    | 'yesno';
   label: string;
   description?: string;
   required: boolean;
@@ -55,105 +70,139 @@ export interface IForm extends Document {
   updatedAt: Date;
 }
 
-const questionOptionSchema = new Schema<IQuestionOption>({
-  id: String,
-  label: String,
-  value: String,
-  limit: Number
-}, { _id: false });
+const questionOptionSchema = new Schema<IQuestionOption>(
+  {
+    id: String,
+    label: String,
+    value: String,
+    limit: Number,
+  },
+  { _id: false }
+);
 
-const questionValidationSchema = new Schema<IQuestionValidation>({
-  minLength: Number,
-  maxLength: Number,
-  min: Number,
-  max: Number,
-  pattern: String,
-  customMessage: String
-}, { _id: false });
+const questionValidationSchema = new Schema<IQuestionValidation>(
+  {
+    minLength: Number,
+    maxLength: Number,
+    min: Number,
+    max: Number,
+    pattern: String,
+    customMessage: String,
+  },
+  { _id: false }
+);
 
-const questionSettingsSchema = new Schema<IQuestionSettings>({
-  placeholder: String,
-  defaultValue: Schema.Types.Mixed,
-  multiple: Boolean,
-  rows: Number,
-  scale: Number
-}, { _id: false });
+const questionSettingsSchema = new Schema<IQuestionSettings>(
+  {
+    placeholder: String,
+    defaultValue: Schema.Types.Mixed,
+    multiple: Boolean,
+    rows: Number,
+    scale: Number,
+  },
+  { _id: false }
+);
 
-const questionSchema = new Schema<IQuestion>({
-  id: String,
-  type: {
-    type: String,
-    enum: ['text', 'textarea', 'email', 'phone', 'number', 'select', 'radio', 'checkbox', 'date', 'time', 'datetime', 'file', 'rating', 'scale', 'yesno'],
-    required: true
+const questionSchema = new Schema<IQuestion>(
+  {
+    id: String,
+    type: {
+      type: String,
+      enum: [
+        'text',
+        'textarea',
+        'email',
+        'phone',
+        'number',
+        'select',
+        'radio',
+        'checkbox',
+        'date',
+        'time',
+        'datetime',
+        'file',
+        'rating',
+        'scale',
+        'yesno',
+      ],
+      required: true,
+    },
+    label: {
+      type: String,
+      required: true,
+    },
+    description: String,
+    required: {
+      type: Boolean,
+      default: false,
+    },
+    isPersonalInfo: {
+      type: Boolean,
+      default: false,
+    },
+    options: [questionOptionSchema],
+    validation: questionValidationSchema,
+    settings: questionSettingsSchema,
   },
-  label: {
-    type: String,
-    required: true
-  },
-  description: String,
-  required: {
-    type: Boolean,
-    default: false
-  },
-  isPersonalInfo: {
-    type: Boolean,
-    default: false
-  },
-  options: [questionOptionSchema],
-  validation: questionValidationSchema,
-  settings: questionSettingsSchema
-}, { _id: false });
+  { _id: false }
+);
 
-const formSettingsSchema = new Schema<IFormSettings>({
-  allowAnonymous: {
-    type: Boolean,
-    default: false
+const formSettingsSchema = new Schema<IFormSettings>(
+  {
+    allowAnonymous: {
+      type: Boolean,
+      default: false,
+    },
+    requireLogin: {
+      type: Boolean,
+      default: true,
+    },
+    maxSubmissions: Number,
+    startDate: Date,
+    endDate: Date,
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
-  requireLogin: {
-    type: Boolean,
-    default: true
-  },
-  maxSubmissions: Number,
-  startDate: Date,
-  endDate: Date,
-  isActive: {
-    type: Boolean,
-    default: true
-  }
-}, { _id: false });
+  { _id: false }
+);
 
-const formSchema = new Schema<IForm>({
-  title: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  description: {
-    type: String,
-    trim: true
-  },
-  questions: {
-    type: [questionSchema],
-    required: true,
-    validate: {
-      validator: function(questions: IQuestion[]) {
-        return questions.length > 0;
+const formSchema = new Schema<IForm>(
+  {
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    description: {
+      type: String,
+      trim: true,
+    },
+    questions: {
+      type: [questionSchema],
+      required: true,
+      validate: {
+        validator: function (questions: IQuestion[]) {
+          return questions.length > 0;
+        },
+        message: 'At least one question is required',
       },
-      message: 'At least one question is required'
-    }
+    },
+    settings: {
+      type: formSettingsSchema,
+      default: () => ({}),
+    },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
   },
-  settings: {
-    type: formSettingsSchema,
-    default: () => ({})
-  },
-  createdBy: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+  {
+    timestamps: true,
   }
-}, {
-  timestamps: true
-});
+);
 
 // インデックス
 formSchema.index({ createdBy: 1 });
@@ -165,7 +214,7 @@ formSchema.virtual('submissionCount', {
   ref: 'Submission',
   localField: '_id',
   foreignField: 'formId',
-  count: true
+  count: true,
 });
 
-export default mongoose.model<IForm>('Form', formSchema); 
+export default mongoose.model<IForm>('Form', formSchema);

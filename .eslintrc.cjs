@@ -1,23 +1,25 @@
 module.exports = {
   root: true,
   env: { browser: true, es2020: true },
+  parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
     ecmaFeatures: {
-      jsx: true
-    }
+      jsx: true,
+    },
+    project: './tsconfig.json',
   },
   extends: [
     'eslint:recommended',
+    'plugin:@typescript-eslint/recommended',
     'plugin:react-hooks/recommended',
     'plugin:react/recommended',
     'plugin:react/jsx-runtime',
-    'prettier'
+    'plugin:prettier/recommended',
   ],
   ignorePatterns: ['dist', '.eslintrc.cjs'],
-
-  plugins: ['react-refresh'],
+  plugins: ['@typescript-eslint', 'react-refresh'],
   rules: {
     'react-refresh/only-export-components': [
       'warn',
@@ -26,14 +28,18 @@ module.exports = {
     'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     'react/prop-types': 'off',
     'react/react-in-jsx-scope': 'off',
-
     'prefer-const': 'error',
     'no-var': 'error',
     'no-console': 'warn',
+    '@typescript-eslint/no-require-imports': 'warn',
+    // TypeScript用の追加ルール例
+    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    '@typescript-eslint/no-explicit-any': 'warn',
   },
+  ignorePatterns: ['dist', '.eslintrc.cjs', 'server/**/*'],
   settings: {
     react: {
-      version: 'detect'
-    }
-  }
-} 
+      version: 'detect',
+    },
+  },
+};

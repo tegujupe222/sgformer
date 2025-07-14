@@ -1,4 +1,3 @@
-
 import type { Submission, EventForm } from '../types';
 
 declare const jsPDF: any;
@@ -7,14 +6,16 @@ declare const JsBarcode: any;
 export const generateTicketPDF = (submission: Submission, form: EventForm) => {
   const { jsPDF: JSPDF } = jsPDF;
   const doc = new JSPDF();
-  
-  const formOption = form.options?.find(opt => opt.id === submission.selectedOptionId);
+
+  const formOption = form.options?.find(
+    opt => opt.id === submission.selectedOptionId
+  );
 
   // --- Header ---
   doc.setFontSize(22);
   doc.setFont('helvetica', 'bold');
   doc.text('SGformer Event Ticket', 105, 20, { align: 'center' });
-  
+
   doc.setFontSize(16);
   doc.setFont('helvetica', 'normal');
   doc.text('Reception Confirmation', 105, 30, { align: 'center' });
@@ -27,7 +28,7 @@ export const generateTicketPDF = (submission: Submission, form: EventForm) => {
   doc.text('Event:', 20, 50);
   doc.setFont('helvetica', 'normal');
   doc.text(form.title, 50, 50);
-  
+
   doc.setFont('helvetica', 'bold');
   doc.text('Session:', 20, 60);
   doc.setFont('helvetica', 'normal');
@@ -43,12 +44,12 @@ export const generateTicketPDF = (submission: Submission, form: EventForm) => {
   doc.text('Email:', 20, 90);
   doc.setFont('helvetica', 'normal');
   doc.text(submission.userEmail, 50, 90);
-  
+
   doc.setFont('helvetica', 'bold');
   doc.text('Submission ID:', 20, 100);
   doc.setFont('helvetica', 'normal');
   doc.text(submission.id, 50, 100);
-  
+
   doc.setLineWidth(0.2);
   doc.line(20, 110, 190, 110);
 
@@ -69,16 +70,20 @@ export const generateTicketPDF = (submission: Submission, form: EventForm) => {
     });
     doc.addImage(barcodeCanvas.toDataURL('image/png'), 'PNG', 55, 120, 100, 30);
     doc.setFontSize(10);
-    doc.text('Please present this ticket at the reception desk.', 105, 160, { align: 'center' });
+    doc.text('Please present this ticket at the reception desk.', 105, 160, {
+      align: 'center',
+    });
   } catch (e) {
-    console.error("Failed to generate barcode:", e);
-    doc.text("Barcode generation failed.", 105, 135, { align: 'center' });
+    console.error('Failed to generate barcode:', e);
+    doc.text('Barcode generation failed.', 105, 135, { align: 'center' });
   }
 
   // --- Footer ---
   doc.line(20, 270, 190, 270);
   doc.setFontSize(10);
-  doc.text(`Generated on: ${new Date().toLocaleString()}`, 105, 275, { align: 'center' });
+  doc.text(`Generated on: ${new Date().toLocaleString()}`, 105, 275, {
+    align: 'center',
+  });
 
   doc.save(`SGformer-Ticket-${submission.id}.pdf`);
 };

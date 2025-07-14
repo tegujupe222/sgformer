@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   name: string;
@@ -7,22 +6,22 @@ export interface User {
 }
 
 // 質問タイプの定義
-export type QuestionType = 
-  | 'text'           // テキスト入力
-  | 'textarea'       // テキストエリア
-  | 'email'          // メールアドレス
-  | 'phone'          // 電話番号
-  | 'number'         // 数値
-  | 'select'         // ドロップダウン選択
-  | 'radio'          // ラジオボタン
-  | 'checkbox'       // チェックボックス
-  | 'date'           // 日付
-  | 'time'           // 時間
-  | 'datetime'       // 日時
-  | 'file'           // ファイルアップロード
-  | 'rating'         // 評価（星など）
-  | 'scale'          // スケール（1-10など）
-  | 'yesno';         // はい/いいえ
+export type QuestionType =
+  | 'text' // テキスト入力
+  | 'textarea' // テキストエリア
+  | 'email' // メールアドレス
+  | 'phone' // 電話番号
+  | 'number' // 数値
+  | 'select' // ドロップダウン選択
+  | 'radio' // ラジオボタン
+  | 'checkbox' // チェックボックス
+  | 'date' // 日付
+  | 'time' // 時間
+  | 'datetime' // 日時
+  | 'file' // ファイルアップロード
+  | 'rating' // 評価（星など）
+  | 'scale' // スケール（1-10など）
+  | 'yesno'; // はい/いいえ
 
 // 選択肢の型定義
 export interface QuestionOption {
