@@ -7,12 +7,14 @@ SGformerプロジェクトへの貢献をありがとうございます！この
 ### 開発環境のセットアップ
 
 1. リポジトリをフォークしてクローン
+
    ```bash
    git clone https://github.com/your-username/sgformer.git
    cd sgformer
    ```
 
 2. 依存関係をインストール
+
    ```bash
    npm install
    ```
@@ -165,4 +167,4 @@ npm run format:check
 
 ---
 
-ご協力ありがとうございます！🎉 
+ご協力ありがとうございます！🎉
