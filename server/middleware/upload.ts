@@ -1,6 +1,7 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { Request } from 'express';
 
 // アップロードディレクトリの作成
 const uploadDir = path.join(__dirname, '../uploads');
@@ -10,10 +11,10 @@ if (!fs.existsSync(uploadDir)) {
 
 // ストレージ設定
 const storage = multer.diskStorage({
-  destination: (req: any, file: Express.Multer.File, cb: any) => {
+  destination: (req: Request, file: any, cb: any) => {
     cb(null, uploadDir);
   },
-  filename: (req: any, file: Express.Multer.File, cb: any) => {
+  filename: (req: Request, file: any, cb: any) => {
     // ファイル名の重複を避けるため、タイムスタンプを追加
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     cb(
@@ -24,11 +25,7 @@ const storage = multer.diskStorage({
 });
 
 // ファイルフィルター
-const fileFilter = (
-  req: any,
-  file: Express.Multer.File,
-  cb: multer.FileFilterCallback
-) => {
+const fileFilter = (req: any, file: any, cb: any) => {
   // 許可するファイルタイプ
   const allowedTypes = [
     'image/jpeg',
@@ -75,7 +72,7 @@ export const uploadMultiple = multer({
 export const handleUpload = (uploadMiddleware: any) => {
   return (req: any, res: any, next: any) => {
     uploadMiddleware(req, res, (err: any) => {
-      if (err instanceof multer.MulterError) {
+      if (err && err.code) {
         if (err.code === 'LIMIT_FILE_SIZE') {
           return res
             .status(400)
