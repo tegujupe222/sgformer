@@ -389,16 +389,14 @@ router.get('/:formId/export', async (req: any, res) => {
   }
 });
 
-// 出席確認エンドポイント
+// 提出物の出席状況のみを更新
 router.patch('/:id/attendance', async (req: any, res) => {
   try {
     const { id } = req.params;
     const { attended } = req.body;
 
     if (typeof attended !== 'boolean') {
-      return res
-        .status(400)
-        .json({ message: 'attended must be a boolean value' });
+      return res.status(400).json({ message: 'attended must be a boolean' });
     }
 
     const submission = await Submission.findById(id);
@@ -415,7 +413,6 @@ router.patch('/:id/attendance', async (req: any, res) => {
       }
     }
 
-    // 出席状況を更新
     submission.attended = attended;
     await submission.save();
 

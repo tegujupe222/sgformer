@@ -15,6 +15,7 @@ import formRoutes from './routes/forms';
 import submissionRoutes from './routes/submissions';
 import userRoutes from './routes/users';
 import uploadRoutes from './routes/upload';
+import notificationsRouter from './routes/notifications';
 
 // 環境変数の読み込み
 dotenv.config();
@@ -58,6 +59,7 @@ app.use('/api/forms', authenticateToken, formRoutes);
 app.use('/api/submissions', authenticateToken, submissionRoutes);
 app.use('/api/users', authenticateToken, requireAdmin, userRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/notifications', notificationsRouter);
 
 // ヘルスチェック
 app.get('/api/health', (req, res) => {

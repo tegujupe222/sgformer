@@ -229,6 +229,43 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// ユーザー情報更新（管理者または本人のみ）
+router.put('/:id', async (req: any, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // 権限チェック: 管理者または本人のみ
+    const currentUser = await User.findOne({ email: req.user.email });
+    if (!currentUser || (currentUser.role !== 'admin' && currentUser._id.toString() !== id)) {
+      return res.status(403).json({ message: 'Permission denied' });
+    }
+
+    if (name) user.name = name;
+    if (email) user.email = email;
+    await user.save();
+
+    res.json({
+      message: 'User updated successfully',
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        isActive: user.isActive,
+      },
+    });
+  } catch (error) {
+    console.error('Update user error:', error);
+    res.status(500).json({ message: 'Failed to update user' });
+  }
+});
+
 // システム統計情報取得
 router.get('/stats/overview', async (req, res) => {
   try {
