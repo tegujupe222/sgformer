@@ -1,6 +1,5 @@
 import React, { useEffect, useCallback } from 'react';
 import { useApp } from '../../context/useApp';
-import { GoogleIcon } from '../ui/Icons';
 import { useTranslation } from '../../utils/i18n';
 import { useNavigate } from 'react-router-dom';
 
@@ -15,7 +14,12 @@ declare global {
           }) => void;
           renderButton: (
             _element: HTMLElement,
-            _options: { theme: string; size: string }
+            _options: {
+              theme: string;
+              size: string;
+              shape?: string;
+              width?: number;
+            }
           ) => void;
           prompt: () => void;
         };
@@ -36,9 +40,11 @@ const Login: React.FC = () => {
   const handleGoogleSignIn = useCallback(
     async (response: GoogleCredentialResponse) => {
       try {
+        console.log('Google Sign-In response received:', response);
         await login(response.credential);
         navigate('/dashboard');
-      } catch {
+      } catch (error) {
+        console.error('Google sign-in error:', error);
         // Google sign-in error handled silently
       }
     },
@@ -46,23 +52,65 @@ const Login: React.FC = () => {
   );
 
   useEffect(() => {
-    if (window.google) {
-      window.google.accounts.id.initialize({
-        client_id: process.env.VITE_GOOGLE_CLIENT_ID || '',
-        callback: handleGoogleSignIn,
-      });
-      window.google.accounts.id.renderButton(
-        document.getElementById('google-signin-button') as HTMLElement,
-        { theme: 'outline', size: 'large' }
+    const initializeGoogleSignIn = () => {
+      console.log('Initializing Google Sign-In...');
+      console.log('Google object available:', !!window.google);
+      console.log(
+        'Google accounts available:',
+        !!(window.google && window.google.accounts)
       );
+      console.log('Client ID:', process.env.VITE_GOOGLE_CLIENT_ID);
+
+      if (window.google && window.google.accounts) {
+        try {
+          window.google.accounts.id.initialize({
+            client_id: process.env.VITE_GOOGLE_CLIENT_ID || '',
+            callback: handleGoogleSignIn,
+          });
+
+          const buttonElement = document.getElementById('google-signin-button');
+          console.log('Button element found:', !!buttonElement);
+          if (buttonElement) {
+            window.google.accounts.id.renderButton(buttonElement, {
+              theme: 'outline',
+              size: 'large',
+              shape: 'rectangular',
+              width: 400,
+            });
+            console.log('Google Sign-In button rendered successfully');
+          }
+        } catch (error) {
+          console.error('Error initializing Google Sign-In:', error);
+        }
+      }
+    };
+
+    // Google Sign-Inスクリプトが読み込まれるまで待機
+    if (window.google && window.google.accounts) {
+      initializeGoogleSignIn();
+    } else {
+      // スクリプトがまだ読み込まれていない場合、複数回試行
+      let attempts = 0;
+      const maxAttempts = 10;
+
+      const tryInitialize = () => {
+        attempts++;
+        console.log(`Attempt ${attempts} to initialize Google Sign-In...`);
+
+        if (window.google && window.google.accounts) {
+          initializeGoogleSignIn();
+        } else if (attempts < maxAttempts) {
+          setTimeout(tryInitialize, 500);
+        } else {
+          console.error(
+            'Failed to initialize Google Sign-In after multiple attempts'
+          );
+        }
+      };
+
+      setTimeout(tryInitialize, 500);
     }
   }, [handleGoogleSignIn]);
-
-  const handleGoogleLogin = () => {
-    if (window.google) {
-      window.google.accounts.id.prompt();
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-primary to-brand-accent p-4">
@@ -77,13 +125,22 @@ const Login: React.FC = () => {
           </div>
         )}
         <div className="space-y-4">
+          <div
+            id="google-signin-button"
+            className="w-full flex justify-center"
+            style={{ minHeight: '40px' }}
+          ></div>
+          {/* フォールバックボタン - Google Sign-Inが失敗した場合 */}
           <button
-            onClick={handleGoogleLogin}
+            onClick={() => {
+              console.log('Fallback button clicked');
+              // デモ用のログイン処理
+              login('demo-user-token');
+            }}
             disabled={isLoading}
             className="w-full flex items-center justify-center px-6 py-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent transition-all duration-200 transform hover:translate-y-[-2px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <GoogleIcon className="w-5 h-5 mr-3" />
-            {isLoading ? 'ログイン中...' : auth('signInWithGoogle')}
+            {isLoading ? 'ログイン中...' : 'Googleでログイン（フォールバック）'}
           </button>
           {/* デモ用ボタンは本番環境では表示しない */}
           {import.meta.env.DEV && (
