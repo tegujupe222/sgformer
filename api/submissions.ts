@@ -101,8 +101,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     } else {
       res.status(405).json({ success: false, message: 'Method not allowed' });
     }
-  } catch (error) {
-    console.error('API Error:', error);
+  } catch (_error) {
     res.status(500).json({
       success: false,
       message: 'サーバーエラーが発生しました',

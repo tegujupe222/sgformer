@@ -1,7 +1,40 @@
 import type { Submission, EventForm } from '../types';
 
-declare const jsPDF: any;
-declare const JsBarcode: any;
+declare const jsPDF: {
+  jsPDF: new () => {
+    setFontSize: (size: number) => void;
+    setFont: (font: string, style: string) => void;
+    text: (
+      text: string,
+      x: number,
+      y: number,
+      options?: { align?: string }
+    ) => void;
+    setLineWidth: (width: number) => void;
+    line: (x1: number, y1: number, x2: number, y2: number) => void;
+    addImage: (
+      data: string,
+      format: string,
+      x: number,
+      y: number,
+      width: number,
+      height: number
+    ) => void;
+    save: (filename: string) => void;
+  };
+};
+
+declare const JsBarcode: (
+  canvas: HTMLCanvasElement,
+  data: string,
+  options: {
+    format: string;
+    displayValue: boolean;
+    width: number;
+    height: number;
+    margin: number;
+  }
+) => void;
 
 export const generateTicketPDF = (submission: Submission, form: EventForm) => {
   const { jsPDF: JSPDF } = jsPDF;
@@ -73,8 +106,7 @@ export const generateTicketPDF = (submission: Submission, form: EventForm) => {
     doc.text('Please present this ticket at the reception desk.', 105, 160, {
       align: 'center',
     });
-  } catch (e) {
-    console.error('Failed to generate barcode:', e);
+  } catch (_e) {
     doc.text('Barcode generation failed.', 105, 135, { align: 'center' });
   }
 

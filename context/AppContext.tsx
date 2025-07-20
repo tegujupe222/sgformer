@@ -1,30 +1,8 @@
-import { createContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, ReactNode, useState, useEffect } from 'react';
+import { authApi, formsApi, submissionsApi } from '../services/api';
+import { ApiError } from '../services/api';
+import type { AppContextType } from './AppContextTypes';
 import type { User, EventForm, Submission } from '../types';
-import { authApi, formsApi, submissionsApi, ApiError } from '../services/api';
-
-interface AppContextType {
-  user: User | null;
-  isLoading: boolean;
-  error: string | null;
-  login: (idToken: string) => Promise<void>;
-  logout: () => Promise<void>;
-  forms: EventForm[];
-  submissions: Submission[];
-  addForm: (
-    form: Omit<EventForm, 'id' | 'createdAt' | 'updatedAt'>
-  ) => Promise<void>;
-  updateForm: (form: EventForm) => Promise<void>;
-  deleteForm: (formId: string) => Promise<void>;
-  addSubmission: (
-    submission: Omit<Submission, 'id' | 'submittedAt'>
-  ) => Promise<void>;
-  updateSubmission: (submission: Submission) => Promise<void>;
-  markAttendance: (submissionId: string, attended: boolean) => Promise<void>;
-  getFormById: (id: string) => EventForm | undefined;
-  getSubmissionsByFormId: (formId: string) => Submission[];
-  getSubmissionById: (id: string) => Submission | undefined;
-  refreshData: () => Promise<void>;
-}
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -236,5 +214,3 @@ export const AppProvider = ({ children }: AppProviderProps) => {
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
-
-// useAppフックは別ファイルに分離

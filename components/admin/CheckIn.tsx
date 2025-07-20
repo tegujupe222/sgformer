@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/useApp';
 import PageWrapper from '../layout/PageWrapper';
@@ -16,7 +16,10 @@ const CheckIn: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const form = formId ? getFormById(formId) : undefined;
-  const submissions = formId ? getSubmissionsByFormId(formId) : [];
+  const submissions = useMemo(
+    () => (formId ? getSubmissionsByFormId(formId) : []),
+    [formId, getSubmissionsByFormId]
+  );
 
   useEffect(() => {
     const currentAttended = submissions

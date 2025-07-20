@@ -18,7 +18,12 @@ module.exports = {
     'plugin:react/jsx-runtime',
     'plugin:prettier/recommended',
   ],
-  ignorePatterns: ['dist', '.eslintrc.cjs'],
+  ignorePatterns: [
+    'dist',
+    '.eslintrc.cjs',
+    'commitlint.config.js',
+    'server/**/*',
+  ],
   plugins: ['@typescript-eslint', 'react-refresh'],
   rules: {
     'react-refresh/only-export-components': [
@@ -45,7 +50,6 @@ module.exports = {
     '@typescript-eslint/prefer-as-const': 'error',
     '@typescript-eslint/no-unnecessary-type-assertion': 'error',
   },
-  ignorePatterns: ['dist', '.eslintrc.cjs', 'server/**/*'],
   settings: {
     react: {
       version: 'detect',

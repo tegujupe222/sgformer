@@ -1,11 +1,11 @@
 import jaTranslations from '../locales/ja.json';
 
 type TranslationKey = string;
-type TranslationValue = string | Record<string, any>;
+type TranslationValue = string | Record<string, unknown>;
 
 class I18n {
   private locale: string = 'ja';
-  private translations: Record<string, any> = jaTranslations;
+  private translations: Record<string, unknown> = jaTranslations;
 
   setLocale(locale: string) {
     this.locale = locale;
@@ -21,15 +21,13 @@ class I18n {
 
     for (const k of keys) {
       if (value && typeof value === 'object' && k in value) {
-        value = value[k];
+        value = value[k] as TranslationValue;
       } else {
-        console.warn(`Translation key not found: ${key}`);
         return key;
       }
     }
 
     if (typeof value !== 'string') {
-      console.warn(`Translation value is not a string: ${key}`);
       return key;
     }
 
