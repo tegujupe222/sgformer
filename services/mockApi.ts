@@ -1,4 +1,64 @@
-import { EventForm, Submission } from '../types';
+import { EventForm, Submission, User } from '../types';
+
+// モックユーザーデータ
+const mockUsers: User[] = [
+  {
+    id: 'user123',
+    email: 'igafactory2023@gmail.com',
+    name: 'Factory2023',
+    role: 'user',
+    profilePicture: 'https://lh3.googleusercontent.com/a/default-user',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'admin001',
+    email: 'admin@sgformer.com',
+    name: 'SGformer Admin',
+    role: 'admin',
+    profilePicture: 'https://lh3.googleusercontent.com/a/default-user',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+];
+
+// モック認証API
+export const mockAuthApi = {
+  googleLogin: async (
+    idToken: string
+  ): Promise<{ user: User; token: string }> => {
+    // デモ用のトークン処理
+    if (idToken === 'demo-user-token') {
+      const user = mockUsers[0]; // 一般ユーザー
+      const token = 'mock-jwt-token-user';
+      localStorage.setItem('sgformer-token', token);
+      return { user, token };
+    } else if (idToken === 'demo-admin-token') {
+      const user = mockUsers[1]; // 管理者
+      const token = 'mock-jwt-token-admin';
+      localStorage.setItem('sgformer-token', token);
+      return { user, token };
+    } else {
+      // Google Sign-Inの場合は一般ユーザーとして処理
+      const user = mockUsers[0];
+      const token = 'mock-jwt-token-google';
+      localStorage.setItem('sgformer-token', token);
+      return { user, token };
+    }
+  },
+
+  getMe: async (): Promise<{ user: User }> => {
+    const token = localStorage.getItem('sgformer-token');
+    if (token === 'mock-jwt-token-admin') {
+      return { user: mockUsers[1] };
+    }
+    return { user: mockUsers[0] };
+  },
+
+  logout: async (): Promise<void> => {
+    localStorage.removeItem('sgformer-token');
+  },
+};
 
 export const getMockForms = (): EventForm[] => [
   {

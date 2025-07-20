@@ -1,7 +1,11 @@
 import { User, EventForm, Submission } from '../types';
+import { mockAuthApi } from './mockApi';
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+
+// 開発環境ではモックAPIを使用
+const USE_MOCK_API = import.meta.env.DEV;
 
 class ApiError extends Error {
   constructor(message: string) {
@@ -34,6 +38,10 @@ export const authApi = {
   googleLogin: async (
     idToken: string
   ): Promise<{ user: User; token: string }> => {
+    if (USE_MOCK_API) {
+      return mockAuthApi.googleLogin(idToken);
+    }
+
     const response = await fetch(`${API_BASE_URL}/auth/google`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -46,6 +54,10 @@ export const authApi = {
 
   // ユーザー情報取得
   getMe: async (): Promise<{ user: User }> => {
+    if (USE_MOCK_API) {
+      return mockAuthApi.getMe();
+    }
+
     const response = await fetch(`${API_BASE_URL}/auth/me`, {
       headers: getAuthHeaders(),
     });
@@ -54,6 +66,11 @@ export const authApi = {
 
   // 管理者権限チェック
   checkAdmin: async (): Promise<{ isAdmin: boolean }> => {
+    if (USE_MOCK_API) {
+      const { user } = await mockAuthApi.getMe();
+      return { isAdmin: user.role === 'admin' };
+    }
+
     const response = await fetch(`${API_BASE_URL}/auth/admin-check`, {
       headers: getAuthHeaders(),
     });
@@ -62,6 +79,10 @@ export const authApi = {
 
   // ログアウト
   logout: async (): Promise<void> => {
+    if (USE_MOCK_API) {
+      return mockAuthApi.logout();
+    }
+
     await fetch(`${API_BASE_URL}/auth/logout`, {
       method: 'POST',
       headers: getAuthHeaders(),

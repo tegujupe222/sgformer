@@ -3,6 +3,9 @@ export interface User {
   name: string;
   email: string;
   role: 'admin' | 'user';
+  profilePicture?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // 質問タイプの定義
