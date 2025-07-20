@@ -2,6 +2,7 @@ import React, { useEffect, useCallback } from 'react';
 import { useApp } from '../../context/useApp';
 import { useTranslation } from '../../utils/i18n';
 import { useNavigate } from 'react-router-dom';
+import { authApi } from '../../services/api';
 
 declare global {
   interface Window {
@@ -159,15 +160,19 @@ const Login: React.FC = () => {
           ></div>
           {/* フォールバックボタン - Google Sign-Inが失敗した場合 */}
           <button
-            onClick={() => {
+            onClick={async () => {
               console.log('Fallback button clicked');
-              // デモ用のログイン処理
-              login('demo-user-token');
+              try {
+                await authApi.demoLogin('user');
+                navigate('/dashboard');
+              } catch (error) {
+                console.error('Fallback login failed:', error);
+              }
             }}
             disabled={isLoading}
             className="w-full flex items-center justify-center px-6 py-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent transition-all duration-200 transform hover:translate-y-[-2px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'ログイン中...' : 'Googleでログイン（フォールバック）'}
+            {isLoading ? 'ログイン中...' : 'デモログイン（一般ユーザー）'}
           </button>
           {/* デモ用ボタンは本番環境では表示しない */}
           {import.meta.env.DEV && (
@@ -181,14 +186,28 @@ const Login: React.FC = () => {
                 </div>
               </div>
               <button
-                onClick={() => login('demo-user-token')}
+                onClick={async () => {
+                  try {
+                    await authApi.demoLogin('user');
+                    navigate('/dashboard');
+                  } catch (error) {
+                    console.error('Demo user login failed:', error);
+                  }
+                }}
                 disabled={isLoading}
                 className="w-full flex items-center justify-center px-6 py-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent transition-all duration-200 transform hover:translate-y-[-2px] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 一般ユーザー（デモ）
               </button>
               <button
-                onClick={() => login('demo-admin-token')}
+                onClick={async () => {
+                  try {
+                    await authApi.demoLogin('admin');
+                    navigate('/dashboard');
+                  } catch (error) {
+                    console.error('Demo admin login failed:', error);
+                  }
+                }}
                 disabled={isLoading}
                 className="w-full flex items-center justify-center px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-brand-secondary hover:bg-brand-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary transition-all duration-200 transform hover:translate-y-[-2px] disabled:opacity-50 disabled:cursor-not-allowed"
               >

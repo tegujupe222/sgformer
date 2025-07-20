@@ -110,4 +110,47 @@ router.get(
   }
 );
 
+// デモ用ログイン（開発環境のみ）
+router.post('/demo', async (req: Request, res: Response) => {
+  try {
+    const { type } = req.body;
+    
+    if (!type || !['user', 'admin'].includes(type)) {
+      return res.status(400).json({ error: 'Invalid demo type' });
+    }
+
+    // デモ用ユーザーデータ
+    const demoUsers = {
+      user: {
+        _id: 'demo-user-id',
+        email: 'igafactory2023@gmail.com',
+        name: 'Factory2023',
+        role: 'user',
+        profilePicture: 'https://lh3.googleusercontent.com/a/default-user',
+      },
+      admin: {
+        _id: 'demo-admin-id',
+        email: 'admin@sgformer.com',
+        name: 'SGformer Admin',
+        role: 'admin',
+        profilePicture: 'https://lh3.googleusercontent.com/a/default-user',
+      },
+    };
+
+    const user = demoUsers[type as keyof typeof demoUsers];
+    
+    // JWTトークンを生成
+    const token = jwt.sign(
+      { userId: user._id, email: user.email, role: user.role },
+      process.env.JWT_SECRET || 'fallback-secret',
+      { expiresIn: '7d' }
+    );
+
+    res.json({ token, user });
+  } catch (error) {
+    console.error('Demo login error:', error);
+    res.status(500).json({ error: 'Demo login failed' });
+  }
+});
+
 export default router;

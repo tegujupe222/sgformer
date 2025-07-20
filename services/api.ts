@@ -4,8 +4,8 @@ import { mockAuthApi } from './mockApi';
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
-// 開発環境ではモックAPIを使用
-const USE_MOCK_API = import.meta.env.DEV;
+// 開発環境では実際のAPIを使用（モックAPIはフォールバック用）
+const USE_MOCK_API = false;
 
 class ApiError extends Error {
   constructor(message: string) {
@@ -88,6 +88,20 @@ export const authApi = {
       headers: getAuthHeaders(),
     });
     localStorage.removeItem('sgformer-token');
+  },
+
+  // デモログイン
+  demoLogin: async (
+    type: 'user' | 'admin'
+  ): Promise<{ user: User; token: string }> => {
+    const response = await fetch(`${API_BASE_URL}/auth/demo`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type }),
+    });
+    const data = await handleResponse(response);
+    localStorage.setItem('sgformer-token', data.token);
+    return data;
   },
 };
 
