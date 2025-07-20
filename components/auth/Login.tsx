@@ -11,6 +11,8 @@ declare global {
           initialize: (_config: {
             client_id: string;
             callback: (_response: GoogleCredentialResponse) => void;
+            auto_select?: boolean;
+            cancel_on_tap_outside?: boolean;
           }) => void;
           renderButton: (
             _element: HTMLElement,
@@ -41,6 +43,7 @@ const Login: React.FC = () => {
     async (response: GoogleCredentialResponse) => {
       try {
         console.log('Google Sign-In response received:', response);
+        console.log('Credential length:', response.credential.length);
         await login(response.credential);
         navigate('/dashboard');
       } catch (error) {
@@ -60,24 +63,48 @@ const Login: React.FC = () => {
         !!(window.google && window.google.accounts)
       );
       console.log('Client ID:', process.env.VITE_GOOGLE_CLIENT_ID);
+      console.log('All env vars:', import.meta.env);
+      console.log(
+        'VITE_GOOGLE_CLIENT_ID from import.meta.env:',
+        import.meta.env.VITE_GOOGLE_CLIENT_ID
+      );
 
       if (window.google && window.google.accounts) {
         try {
+          const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+          console.log('Using client ID:', clientId);
+
+          if (!clientId) {
+            console.error('VITE_GOOGLE_CLIENT_ID is not set');
+            return;
+          }
+
           window.google.accounts.id.initialize({
-            client_id: process.env.VITE_GOOGLE_CLIENT_ID || '',
+            client_id: clientId,
             callback: handleGoogleSignIn,
+            auto_select: false,
+            cancel_on_tap_outside: true,
           });
 
           const buttonElement = document.getElementById('google-signin-button');
           console.log('Button element found:', !!buttonElement);
           if (buttonElement) {
-            window.google.accounts.id.renderButton(buttonElement, {
-              theme: 'outline',
-              size: 'large',
-              shape: 'rectangular',
-              width: 400,
-            });
-            console.log('Google Sign-In button rendered successfully');
+            try {
+              window.google.accounts.id.renderButton(buttonElement, {
+                theme: 'outline',
+                size: 'large',
+                shape: 'rectangular',
+                width: 400,
+              });
+              console.log('Google Sign-In button rendered successfully');
+            } catch (renderError) {
+              console.error(
+                'Error rendering Google Sign-In button:',
+                renderError
+              );
+            }
+          } else {
+            console.error('Google Sign-In button element not found');
           }
         } catch (error) {
           console.error('Error initializing Google Sign-In:', error);
